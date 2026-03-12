@@ -874,7 +874,13 @@ public class ClientDao extends SocieteDao {
       String codePostal = rs.getString("code_postal");
       String ville = rs.getString("ville");
 
-      Adresse adresse = new Adresse(numeroRue, nomRue, codePostal, ville);
+      /*Adresse adresse = new Adresse(numeroRue, nomRue, codePostal, ville);*/
+      Adresse adresse = Adresse.builder()
+              .numeroRue(numeroRue)
+                  .nomRue(nomRue)
+                      .codePostal(codePostal)
+                          .ville(ville)
+                              .build();
       adresse.setId(adresseId);
 
       // ========== Données spécifiques Client ==========

@@ -415,12 +415,12 @@ public class AdresseDao {
    * @throws ValidationException si les données ne respectent pas les règles métier
    */
   private Adresse mapResultSetToAdresse(ResultSet rs) throws SQLException, ValidationException {
-    Adresse adresse = new Adresse(
-            rs.getString("numero_rue"),
-            rs.getString("nom_rue"),
-            rs.getString("code_postal"),
-            rs.getString("ville")
-    );
+    Adresse adresse = Adresse.builder()
+        .numeroRue("numero_rue")
+        .nomRue("nom_rue")
+        .codePostal("code_postal")
+        .ville("ville")
+        .build();
     adresse.setId(rs.getInt("id_adresse"));
     return adresse;
   }
