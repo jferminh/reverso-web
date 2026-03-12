@@ -1,8 +1,9 @@
 package com.julio.model;
 
 import com.julio.exception.ValidationException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,19 +29,23 @@ import java.util.List;
  * @see Societe
  * @see Contrat
  */
-public class Client extends Societe implements Serializable {
+public class Client extends Societe {
   @Serial
   private static final long serialVersionUID = 1L;
 
   /**
    * Chiffre d'affaires du client en euros (minimum 200).
    */
-  private long chiffreAffaires;
+  @NotNull(message = "Le chiffre d'affaires est obligatoire")
+  @Min(value = 200, message = "Le chiffre d'affaires doit être >= 200")
+  private Long chiffreAffaires;
 
   /**
    * Nombre d'employés du client (minimum 1).
    */
-  private int nbEmployes;
+  @NotNull(message = "Le nombre d'employés est obligatoire")
+  @Min(value = 1, message = "Le nombre d'employés doit être >= 1")
+  private Integer nbEmployes;
 
   /**
    * Liste des contrats associés au client.

@@ -1,8 +1,10 @@
 package com.julio.model;
 
 import com.julio.exception.ValidationException;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
@@ -27,12 +29,15 @@ import java.time.LocalDate;
  * @see Societe
  * @see Interesse
  */
-public class Prospect extends Societe implements Serializable {
+public class Prospect extends Societe {
   @Serial
   private static final long serialVersionUID = 1L;
 
+  @NotNull(message = "La date de prospection est obligatoire.")
+  @PastOrPresent(message = "La date doit être dans le passé ou présent")
   private LocalDate dateProspection;
 
+  @NotBlank(message = "Intérêt est obligatoire")
   private Interesse interesse;
 
   /**

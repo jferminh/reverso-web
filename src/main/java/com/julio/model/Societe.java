@@ -2,6 +2,7 @@ package com.julio.model;
 
 import com.julio.exception.ValidationException;
 import com.julio.util.RegexPatterns;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -28,6 +29,7 @@ public abstract class Societe implements Serializable {
   @Size(min = 2, max = 100, message = "La raison sociale doit avoir entre 2 et 100 caractères")
   private String raisonSociale;
 
+  @Valid
   private Adresse adresse;
 
   @NotBlank(message = "Le téléphone est obligatoire")
@@ -37,6 +39,7 @@ public abstract class Societe implements Serializable {
   @NotBlank(message = "L'email est obligatoire")
   @Email(regexp = RegexPatterns.EMAIL, message = "Format email invalide")
   private String email;
+
   private String commentaires;
 
   /**

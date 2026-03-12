@@ -1,6 +1,9 @@
 package com.julio.model;
 
 import com.julio.exception.ValidationException;
+import com.julio.util.RegexPatterns;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serial;
 import java.io.Serializable;
 
@@ -36,21 +39,26 @@ public class Adresse implements Serializable {
   /**
    * Numéro dans la rue (peut inclure bis, ter, etc.). Obligatoire
    */
+  @NotBlank(message = "Le numéro de voie est obligatoire")
   private String numeroRue;
 
   /**
    * Nom de la voie (rue, avenue, boulevard, etc.). Obligatoire
    */
+  @NotBlank(message = "Le nom de la voie est obligatoire")
   private String nomRue;
 
   /**
    * Code postal français à 5 chiffres - obligatoire et validé.
    */
+  @NotBlank(message = "Le code postal est obligatoire")
+  @Pattern(regexp = RegexPatterns.CODE_POSTAL, message = "Code postal invalide (5 chiffres)")
   private String codePostal;
 
   /**
    * Nom de la ville - obligatoire.
    */
+  @NotBlank(message = "La ville est obligatoire")
   private String ville;
 
   /**

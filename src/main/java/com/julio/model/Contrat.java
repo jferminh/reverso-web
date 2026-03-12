@@ -1,6 +1,9 @@
 package com.julio.model;
 
 import com.julio.exception.ValidationException;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
@@ -43,12 +46,15 @@ public class Contrat implements Serializable {
   /**
    * Nom ou désignation du contrat (obligatoire).
    */
+  @NotBlank(message = "Le nom du contrat est obligatoire.")
   private String nomContrat;
 
   /**
    * Montant financier du contrat en euros (doit être > 0).
    */
-  private double montant;
+  @NotNull(message = "Le montant du contrat est obligatoire")
+  @Positive(message = "Le montant doit être > 0")
+  private Double montant;
 
   /**
    * Constructeur principal de la classe Contrat.
