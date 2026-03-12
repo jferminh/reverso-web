@@ -1,7 +1,7 @@
 /**
  * Package contenant les classes du modèle métier de l'application.
- * <p>
- * Ce package regroupe les entités principales représentant les concepts
+ *
+ * <p>Ce package regroupe les entités principales représentant les concepts
  * métier de l'application de gestion (sociétés, adresses, etc.).
  * Toutes les classes du modèle implémentent des validations pour garantir
  * l'intégrité des données.

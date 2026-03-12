@@ -2,10 +2,10 @@ package com.julio.dao;
 
 import static com.julio.util.JdbcUtil.closeResources;
 
-import com.julio.exception.DAOException;
+import com.julio.exception.DaoException;
 import com.julio.exception.ValidationException;
 import com.julio.model.Adresse;
-import com.julio.util.SQLExceptionAnalyzer;
+import com.julio.util.SqlExceptionAnalyzer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,14 +46,14 @@ public class AdresseDao {
   /**
    * Constructeur qui récupère l'instance de DatabaseConnexion.
    */
-  public AdresseDao() throws DAOException {
+  public AdresseDao() throws DaoException {
     try {
       this.dbConnexion = DatabaseConnexion.getInstance();
 
     } catch (SQLException ex) {
       LOGGER.log(Level.SEVERE, "Echec de l'initialisation de AdresseDao", ex);
-      throw new DAOException(
-              DAOException.ErrorCode.CONNECTION_ERROR,
+      throw new DaoException(
+              DaoException.ErrorCode.CONNECTION_ERROR,
               "init",
               null,
               "Impossible d'initialiser AdresseDao : " + ex.getMessage(),
@@ -66,9 +66,9 @@ public class AdresseDao {
    * Récupère toutes les adresses de la base de données.
    *
    * @return une liste de toutes les adresses
-   * @throws DAOException si une erreur survient lors de la requête
+   * @throws DaoException si une erreur survient lors de la requête
    */
-  public List<Adresse> findAll() throws DAOException {
+  public List<Adresse> findAll() throws DaoException {
     List<Adresse> adresses = new ArrayList<>();
     String query = "SELECT id, "
             + "numero_rue, "
@@ -87,18 +87,18 @@ public class AdresseDao {
 
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de toutes les adresses", e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
+      throw new DaoException(
+              SqlExceptionAnalyzer.categorize(e),
               "findAll",
               null,
               "Erreur lors de la récupération de toutes les adresses"
-                      + SQLExceptionAnalyzer.analyze(e),
+                      + SqlExceptionAnalyzer.analyze(e),
               e
       );
     } catch (ValidationException e) {
       LOGGER.log(Level.SEVERE, "Erreur de validation lors du mapping");
-      throw new DAOException(
-              DAOException.ErrorCode.READ_ERROR,
+      throw new DaoException(
+              DaoException.ErrorCode.READ_ERROR,
               "findAll",
               null,
               "Erre de validation des données : " + e.getMessage(),
@@ -112,12 +112,12 @@ public class AdresseDao {
    *
    * @param id l'identifiant de l'adresse
    * @return l'adresse correspondante ou null si non trouvée
-   * @throws DAOException si une erreur survient lors de la requête
+   * @throws DaoException si une erreur survient lors de la requête
    */
-  public Adresse findById(Integer id) throws DAOException {
+  public Adresse findById(Integer id) throws DaoException {
     if (id == null || id <= 0) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
+      throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
               "findById",
               id,
               "L'ID doit être un entier positif non null"
@@ -142,17 +142,17 @@ public class AdresseDao {
       }
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, "Erreur lors de la recherche de l'adresse avec l'ID {0}" + id, e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
+      throw new DaoException(
+              SqlExceptionAnalyzer.categorize(e),
               "findById",
               id,
-              "Erreur lors de la recherche de l'adresse : " + SQLExceptionAnalyzer.analyze(e),
+              "Erreur lors de la recherche de l'adresse : " + SqlExceptionAnalyzer.analyze(e),
               e
       );
     } catch (ValidationException e) {
       LOGGER.log(Level.SEVERE, "Erreur de validation lors du mapping", e);
-      throw new DAOException(
-              DAOException.ErrorCode.READ_ERROR,
+      throw new DaoException(
+              DaoException.ErrorCode.READ_ERROR,
               "findById",
               id,
               "Erreur de validation des données : " + e.getMessage(),
@@ -167,12 +167,12 @@ public class AdresseDao {
    *
    * @param adresse l'adresse à insérer
    * @return l'adresse avec son ID généré
-   * @throws DAOException si une erreur survient lors de l'insertion
+   * @throws DaoException si une erreur survient lors de l'insertion
    */
-  public Adresse create(Adresse adresse) throws DAOException {
+  public Adresse create(Adresse adresse) throws DaoException {
     if (adresse == null) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
+      throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
               "create",
               null,
               "L'adresse ne peut pas être null"
@@ -216,11 +216,11 @@ public class AdresseDao {
 
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, "Erreur SQL lors de create adresse", e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
+      throw new DaoException(
+              SqlExceptionAnalyzer.categorize(e),
               "create",
               null,
-              "Erreur création adresse : " + SQLExceptionAnalyzer.analyze(e),
+              "Erreur création adresse : " + SqlExceptionAnalyzer.analyze(e),
               e
       );
     } finally {
@@ -234,9 +234,9 @@ public class AdresseDao {
    *
    * @param adresse l'adresse à mettre à jour
    * @return true si la mise à jour a réussi, false sinon
-   * @throws DAOException si une erreur survient
+   * @throws DaoException si une erreur survient
    */
-  public boolean save(Adresse adresse) throws DAOException {
+  public boolean save(Adresse adresse) throws DaoException {
     Connection conn = dbConnexion.getConnection();
     return save(adresse, conn);
   }
@@ -250,12 +250,12 @@ public class AdresseDao {
    * @param adresse    l'adresse à mettre à jour (doit avoir un ID valide)
    * @param connection la connexion à utiliser (en transaction)
    * @return true si la mise à jour a réussi, false si l'adresse n'existe pas
-   * @throws DAOException si une erreur survient lors de la mise à jour
+   * @throws DaoException si une erreur survient lors de la mise à jour
    */
-  public boolean save(Adresse adresse, Connection connection) throws DAOException {
+  public boolean save(Adresse adresse, Connection connection) throws DaoException {
     if (adresse == null || adresse.getId() == null || adresse.getId() <= 0) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
+      throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
               "save",
               adresse != null ? adresse.getId() : null,
               "L'adresse doit avoir un ID valide pour être mise à jour"
@@ -263,8 +263,8 @@ public class AdresseDao {
     }
 
     if (connection == null) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
+      throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
               "save",
               adresse.getId(),
               "La connexion ne peut pas être null"
@@ -306,11 +306,11 @@ public class AdresseDao {
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE,
               "Erreur SQL lors de la mise à jour de l'adresse ID=" + adresse.getId(), e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
+      throw new DaoException(
+              SqlExceptionAnalyzer.categorize(e),
               "save",
               adresse.getId(),
-              "Erreur lors de la mise à jour de l'adresse : " + SQLExceptionAnalyzer.analyze(e),
+              "Erreur lors de la mise à jour de l'adresse : " + SqlExceptionAnalyzer.analyze(e),
               e
       );
     } finally {
@@ -334,14 +334,14 @@ public class AdresseDao {
    *
    * @param connection la connexion en transaction (non null)
    * @param adresseId  l'ID de l'adresse à supprimer
-   * @throws DAOException si une erreur survient lors de la suppression
+   * @throws DaoException si une erreur survient lors de la suppression
    */
   protected void deleteAdresse(Connection connection, Integer adresseId)
-          throws DAOException {
+          throws DaoException {
 
     if (connection == null) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
+      throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
               "deleteAdresse",
               adresseId,
               "La connexion ne peut pas être null"
@@ -349,8 +349,8 @@ public class AdresseDao {
     }
 
     if (adresseId == null || adresseId <= 0) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
+      throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
               "deleteAdresse",
               adresseId,
               "L'ID adresse doit être un entier positif non null"
@@ -367,8 +367,8 @@ public class AdresseDao {
       int rowsAffected = pstmt.executeUpdate();
 
       if (rowsAffected <= 0) {
-        throw new DAOException(
-                DAOException.ErrorCode.ENTITY_NOT_FOUND,
+        throw new DaoException(
+                DaoException.ErrorCode.ENTITY_NOT_FOUND,
                 "deleteAdresse",
                 adresseId,
                 "Aucune adresse trouvée avec l'ID " + adresseId
@@ -379,10 +379,10 @@ public class AdresseDao {
       LOGGER.log(Level.SEVERE,
               "Erreur SQL lors de la suppression de l'adresse ID=" + adresseId, e);
 
-      if (SQLExceptionAnalyzer.isForeignKeyViolation(e)) {
-        String constraintName = SQLExceptionAnalyzer.extractConstraintName(e);
-        throw new DAOException(
-                DAOException.ErrorCode.FOREIGN_KEY_VIOLATION,
+      if (SqlExceptionAnalyzer.isForeignKeyViolation(e)) {
+        String constraintName = SqlExceptionAnalyzer.extractConstraintName(e);
+        throw new DaoException(
+                DaoException.ErrorCode.FOREIGN_KEY_VIOLATION,
                 "deleteAdresse",
                 adresseId,
                 "Impossible de supprimer l'adresse : elle est référencée par d'autres entités"
@@ -391,11 +391,11 @@ public class AdresseDao {
         );
       }
 
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
+      throw new DaoException(
+              SqlExceptionAnalyzer.categorize(e),
               "deleteAdresse",
               adresseId,
-              "Erreur lors de la suppression de l'adresse : " + SQLExceptionAnalyzer.analyze(e),
+              "Erreur lors de la suppression de l'adresse : " + SqlExceptionAnalyzer.analyze(e),
               e
       );
     } finally {

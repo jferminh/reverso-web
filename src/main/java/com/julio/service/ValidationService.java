@@ -4,8 +4,8 @@ import com.julio.util.RegexPatterns;
 
 /**
  * Service utilitaire centralisé pour la validation des données métier.
- * <p>
- * Cette classe fournit un ensemble de méthodes statiques pour valider différents
+ *
+ * <p>Cette classe fournit un ensemble de méthodes statiques pour valider différents
  * types de données selon les règles métier et les formats standardisés de l'application.
  * Toutes les validations basées sur des expressions régulières utilisent les patterns
  * définis dans {@link RegexPatterns} pour garantir la cohérence et la maintenabilité.
@@ -37,8 +37,8 @@ public class ValidationService {
 
   /**
    * Vérifie si une chaîne de caractères est null ou vide.
-   * <p>
-   * Cette méthode utilise {@link String#isBlank()} (Java 11+) qui considère
+   *
+   * <p>Cette méthode utilise {@link String#isBlank()} (Java 11+) qui considère
    * une chaîne comme vide si elle ne contient que des espaces blancs
    * (espaces, tabulations, retours à la ligne, etc.).
    * </p>
@@ -52,8 +52,8 @@ public class ValidationService {
 
   /**
    * Vérifie si un code postal respecte le format français.
-   * <p>
-   * Un code postal valide doit contenir exactement 5 chiffres consécutifs.
+   *
+   * <p>Un code postal valide doit contenir exactement 5 chiffres consécutifs.
    * La validation utilise l'expression régulière définie dans
    * {@link RegexPatterns#CODE_POSTAL}.
    * </p>
@@ -83,8 +83,8 @@ public class ValidationService {
 
   /**
    * Vérifie si une adresse email respecte le format standard.
-   * <p>
-   * Un email valide doit contenir un nom d'utilisateur, le symbole @,
+   *
+   * <p>Un email valide doit contenir un nom d'utilisateur, le symbole @,
    * un nom de domaine et une extension. La validation utilise l'expression
    * régulière définie dans {@link RegexPatterns#EMAIL}.
    * </p>
@@ -114,8 +114,8 @@ public class ValidationService {
 
   /**
    * Vérifie si un numéro de téléphone respecte le format français.
-   * <p>
-   * Un téléphone valide peut être au format mobile (06, 07) ou fixe (01-05, 09).
+   *
+   * <p>Un téléphone valide peut être au format mobile (06, 07) ou fixe (01-05, 09).
    * La validation utilise l'expression régulière définie dans
    * {@link RegexPatterns#TELEPHONE}.
    * </p>

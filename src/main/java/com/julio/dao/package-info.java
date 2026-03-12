@@ -1,7 +1,7 @@
 /**
  * Classes DAO (Data Access Object) pour la persistance MySQL.
- * <p>
- * Implémente le pattern DAO avec transactions ACID, gestion d'erreurs typées
+ *
+ * <p>Implémente le pattern DAO avec transactions ACID, gestion d'erreurs typées
  * et analyse avancée des exceptions SQL.
  * </p>
  *
@@ -9,14 +9,14 @@
  * <ul>
  *   <li>{@link com.julio.dao.ClientDao} - CRUD clients</li>
  *   <li>{@link com.julio.dao.ProspectDao} - CRUD prospects</li>
- *   <li>{@link com.julio.dao.ContratDAO} - CRUD contrats</li>
+ *   <li>{@link com.julio.dao.ContratDao} - CRUD contrats</li>
  *   <li>{@link com.julio.dao.AdresseDao} - Opérations adresses (protected)</li>
- *   <li>{@link com.julio.dao.SocieteDAO} - Opérations sociétés (protected)</li>
+ *   <li>{@link com.julio.dao.SocieteDao} - Opérations sociétés (protected)</li>
  * </ul>
  *
  * <h2>Gestion des Transactions</h2>
- * <p>
- * Les opérations d'écriture utilisent des transactions pour garantir l'intégrité :
+ *
+ * <p>Les opérations d'écriture utilisent des transactions pour garantir l'intégrité :
  * </p>
  * <pre>
  * connection.setAutoCommit(false);
@@ -25,13 +25,13 @@
  *     connection.commit();
  * } catch (SQLException e) {
  *     connection.rollback();
- *     throw new DAOException(...);
+ *     throw new DaoException(...);
  * }
  * </pre>
  *
  * <h2>Exceptions</h2>
- * <p>
- * Toutes les méthodes lancent {@link com.julio.exception.DAOException}
+ *
+ * <p>Toutes les méthodes lancent {@link com.julio.exception.DaoException}
  * avec codes d'erreur spécifiques :
  * </p>
  * <ul>
@@ -44,7 +44,7 @@
  *
  * @author Julio FERMIN
  * @version 2.0
- * @see com.julio.exception.DAOException
+ * @see com.julio.exception.DaoException
  * @since 15/01/2026
  */
 package com.julio.dao;

@@ -8,8 +8,8 @@ import java.util.logging.LogRecord;
 
 /**
  * Formateur personnalisé pour les logs de l'application.
- * <p>
- * Cette classe étend {@link Formatter} pour définir un format de log structuré
+ *
+ * <p>Cette classe étend {@link Formatter} pour définir un format de log structuré
  * et lisible, adapté aux besoins de débogage et de traçabilité de l'application.
  * Chaque entrée de log contient la date/heure, le niveau de gravité, le message,
  * la classe source et la méthode source.
@@ -22,7 +22,8 @@ import java.util.logging.LogRecord;
  *
  * <p><b>Exemple concret :</b></p>
  * <pre>
- * 20/11/2025 09:15:32 Level : INFO / Message : Client créé avec succès / Classe :main.com.julio.service.ClientService / Methode :createClient
+ * 20/11/2025 09:15:32 Level : INFO / Message : Client créé avec succès
+ *    / Classe :main.com.julio.service.ClientService / Methode :createClient
  * </pre>
  *
  * <p><b>Utilisation :</b></p>
@@ -44,8 +45,8 @@ public class FormatterLog extends Formatter {
 
   /**
    * Formate un enregistrement de log selon le format personnalisé de l'application.
-   * <p>
-   * Construit une chaîne de caractères structurée contenant :
+   *
+   * <p>Construit une chaîne de caractères structurée contenant :
    * </p>
    * <ol>
    *   <li><b>Date/Heure</b> : horodatage au format "dd/MM/yyyy HH:mm:ss"</li>
@@ -54,8 +55,8 @@ public class FormatterLog extends Formatter {
    *   <li><b>Classe</b> : nom complet de la classe source de l'événement</li>
    *   <li><b>Méthode</b> : nom de la méthode source de l'événement</li>
    * </ol>
-   * <p>
-   * Chaque entrée se termine par un retour à la ligne pour faciliter la lecture
+   *
+   * <p>Chaque entrée se termine par un retour à la ligne pour faciliter la lecture
    * dans les fichiers de log.
    * </p>
    *

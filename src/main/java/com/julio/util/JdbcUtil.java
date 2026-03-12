@@ -9,8 +9,8 @@ import java.util.logging.Logger;
 
 /**
  * Utilitaires JDBC pour la gestion des ressources.
- * <p>
- * Ferme en sécurité ResultSet et Statement, sans jamais fermer la connexion
+ *
+ * <p>Ferme en sécurité ResultSet et Statement, sans jamais fermer la connexion
  * qui est gérée par le Singleton DatabaseConnection.
  * </p>
  */
@@ -24,6 +24,7 @@ public final class JdbcUtil {
 
   /**
    * Ferme les ressources JDBC de manière sécurisée.
+   *
    * <p><b>IMPORTANT :</b> la connexion n'est jamais fermée ici.</p>
    *
    * @param rs         le ResultSet à fermer (peut être null)

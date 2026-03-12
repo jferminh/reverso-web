@@ -2,13 +2,13 @@ package com.julio.dao;
 
 import static com.julio.util.JdbcUtil.closeResources;
 
-import com.julio.exception.DAOException;
+import com.julio.exception.DaoException;
 import com.julio.exception.ValidationException;
 import com.julio.model.Adresse;
 import com.julio.model.Client;
 import com.julio.model.Contrat;
 import com.julio.service.LoggerService;
-import com.julio.util.SQLExceptionAnalyzer;
+import com.julio.util.SqlExceptionAnalyzer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 /**
  * DAO pour la gestion de la persistance des clients.
  *
- * <p> Gère les opérations CRUD sur la table {@code client} et les tables
+ * <p>Gère les opérations CRUD sur la table {@code client} et les tables
  * associées ({@code societe}, {@code adresse}) via transactions ACID.
  * </p>
  *
@@ -54,49 +54,49 @@ import java.util.logging.Logger;
  * @author Julio FERMIN
  * @version 2.0
  * @see Client
- * @see DAOException
+ * @see DaoException
  * @since 15/01/2026
  */
-public class ClientDao extends SocieteDAO {
+public class ClientDao extends SocieteDao {
 
   private static final Logger LOGGER = LoggerService.getLogger(ClientDao.class);
-  private final ContratDAO contratDAO;
+  private final ContratDao contratDao;
 
   /**
    * Constructeur qui récupère l'instance de DatabaseConnection.
-   * Initialise également le ContratDAO pour gérer les contrats associés.
+   * Initialise également le ContratDao pour gérer les contrats associés.
    *
-   * @throws DAOException si la connexion à la base de données échoue
+   * @throws DaoException si la connexion à la base de données échoue
    */
-  public ClientDao() throws DAOException {
+  public ClientDao() throws DaoException {
     super();
-    this.contratDAO = new ContratDAO();
+    this.contratDao = new ContratDao();
 
   }
 
   /**
    * Récupère tous les clients de la base de données avec leurs adresses et contrats.
    *
-   * <p> Effectue une jointure entre les tables societe, client, adresse et contrat
+   * <p>Effectue une jointure entre les tables societe, client, adresse et contrat
    * pour récupérer toutes les informations en une seule requête.
    *
    * @return une liste de tous les clients
-   * @throws DAOException si une erreur survient lors de la requête
+   * @throws DaoException si une erreur survient lors de la requête
    */
-  public List<Client> findAll() throws DAOException {
+  public List<Client> findAll() throws DaoException {
     Map<Integer, Client> clientsMap = new LinkedHashMap<>();
 
     String sql = """
-            SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone, s.email,
-            s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
-            a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat, 
-            ct.nom_contrat, ct.montant 
-            FROM societe s 
-            INNER JOIN client c ON s.id_societe = c.id_societe 
-            INNER JOIN adresse a ON s.adresse_id = a.id_adresse
-            LEFT JOIN contrat ct ON c.id_client = ct.client_id
-            ORDER BY s.raison_sociale ASC
-            """;
+        SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone, s.email,
+        s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
+        a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat, 
+        ct.nom_contrat, ct.montant 
+        FROM societe s 
+        INNER JOIN client c ON s.id_societe = c.id_societe 
+        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+        LEFT JOIN contrat ct ON c.id_client = ct.client_id
+        ORDER BY s.raison_sociale ASC
+        """;
 
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -116,12 +116,12 @@ public class ClientDao extends SocieteDAO {
             client = mapResultSetToClient(rs);
             clientsMap.put(clientId, client);
           } catch (ValidationException e) {
-            throw new DAOException(
-                    DAOException.ErrorCode.INVALID_PARAMETER,
-                    "findAll",
-                    clientId,
-                    "Données invalides : " + e.getMessage(),
-                    e
+            throw new DaoException(
+                DaoException.ErrorCode.INVALID_PARAMETER,
+                "findAll",
+                clientId,
+                "Données invalides : " + e.getMessage(),
+                e
             );
           }
         }
@@ -131,9 +131,9 @@ public class ClientDao extends SocieteDAO {
         if (!rs.wasNull() && contratId != null && contratId > 0) {
           try {
             Contrat contrat = new Contrat(
-                    clientId,
-                    rs.getString("nom_contrat"),
-                    rs.getDouble("montant")
+                clientId,
+                rs.getString("nom_contrat"),
+                rs.getDouble("montant")
             );
             contrat.setId(contratId);
 
@@ -142,7 +142,7 @@ public class ClientDao extends SocieteDAO {
             }
           } catch (ValidationException e) {
             LOGGER.log(Level.WARNING,
-                    "Contrat invalide ignoré pour client ID={0}", clientId);
+                "Contrat invalide ignoré pour client ID={0}", clientId);
           }
         }
       }
@@ -151,12 +151,12 @@ public class ClientDao extends SocieteDAO {
 
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, "Erreur SQL dans findAll", e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
-              "findAll",
-              null,
-              "Erreur récupération clients : " + SQLExceptionAnalyzer.analyze(e),
-              e
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "findAll",
+          null,
+          "Erreur récupération clients : " + SqlExceptionAnalyzer.analyze(e),
+          e
       );
     } finally {
       closeResources(rs, pstmt, null);
@@ -173,29 +173,29 @@ public class ClientDao extends SocieteDAO {
    *
    * @param id l'identifiant du client à rechercher
    * @return le client trouvé avec ses contrats, ou null si aucun client ne correspond
-   * @throws DAOException si une erreur survient lors de la recherche
+   * @throws DaoException si une erreur survient lors de la recherche
    */
-  public Client findById(Integer id) throws DAOException {
+  public Client findById(Integer id) throws DaoException {
     if (id == null || id <= 0) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
-              "findById",
-              id,
-              "L'ID doit être un entier positif non null"
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "findById",
+          id,
+          "L'ID doit être un entier positif non null"
       );
     }
 
     String sql = """
-            SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone,
-            s.email, s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
-            a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat,
-            ct.nom_contrat, ct.montant 
-            FROM societe s 
-            INNER JOIN client c ON s.id_societe = c.id_societe 
-            INNER JOIN adresse a ON s.adresse_id = a.id_adresse
-            LEFT JOIN contrat ct ON c.id_client = ct.client_id
-            WHERE c.id_client = ?
-            """;
+        SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone,
+        s.email, s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
+        a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat,
+        ct.nom_contrat, ct.montant 
+        FROM societe s 
+        INNER JOIN client c ON s.id_societe = c.id_societe 
+        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+        LEFT JOIN contrat ct ON c.id_client = ct.client_id
+        WHERE c.id_client = ?
+        """;
 
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -216,13 +216,13 @@ public class ClientDao extends SocieteDAO {
 
           } catch (ValidationException e) {
             LOGGER.log(Level.SEVERE,
-                    "Erreur de validation lors du mapping du client ID={0}", id);
-            throw new DAOException(
-                    DAOException.ErrorCode.INVALID_PARAMETER,
-                    "findById",
-                    id,
-                    "Données invalides pour le client : " + e.getMessage(),
-                    e
+                "Erreur de validation lors du mapping du client ID={0}", id);
+            throw new DaoException(
+                DaoException.ErrorCode.INVALID_PARAMETER,
+                "findById",
+                id,
+                "Données invalides pour le client : " + e.getMessage(),
+                e
             );
           }
         }
@@ -247,8 +247,8 @@ public class ClientDao extends SocieteDAO {
 
           } catch (ValidationException e) {
             LOGGER.log(Level.WARNING,
-                    "Contrat invalide ignoré pour le client ID={0} : {1}",
-                    new Object[]{id, e.getMessage()});
+                "Contrat invalide ignoré pour le client ID={0} : {1}",
+                new Object[]{id, e.getMessage()});
             // On continue sans bloquer le chargement du client
           }
         }
@@ -256,8 +256,8 @@ public class ClientDao extends SocieteDAO {
 
       if (client != null) {
         LOGGER.log(Level.INFO,
-                "Client ID={0} récupéré avec {1} contrat(s)",
-                new Object[]{id, client.getContrats().size()});
+            "Client ID={0} récupéré avec {1} contrat(s)",
+            new Object[]{id, client.getContrats().size()});
       } else {
         LOGGER.log(Level.FINE, "Aucun client trouvé avec l''ID {0}", id);
       }
@@ -266,12 +266,12 @@ public class ClientDao extends SocieteDAO {
 
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, "Erreur SQL lors de findById avec ID=" + id, e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
-              "findById",
-              id,
-              "Erreur lors de la recherche du client : " + SQLExceptionAnalyzer.analyze(e),
-              e
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "findById",
+          id,
+          "Erreur lors de la recherche du client : " + SqlExceptionAnalyzer.analyze(e),
+          e
       );
     } finally {
       closeResources(rs, pstmt, null);
@@ -289,15 +289,15 @@ public class ClientDao extends SocieteDAO {
    *
    * @param client le client à créer (ne doit pas être null)
    * @return le client créé avec son ID généré
-   * @throws DAOException si une erreur survient lors de la création
+   * @throws DaoException si une erreur survient lors de la création
    */
-  public Client create(Client client) throws DAOException {
+  public Client create(Client client) throws DaoException {
     if (client == null) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
-              "create",
-              null,
-              "Le client ne peut pas être null"
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "create",
+          null,
+          "Le client ne peut pas être null"
       );
     }
 
@@ -315,9 +315,9 @@ public class ClientDao extends SocieteDAO {
 
       // ========== ÉTAPE 2 : Insérer la partie client ==========
       String sql = """
-              INSERT INTO client (id_societe, chiffre_affaires, nb_employes)
-              VALUES (?, ?, ?)
-              """;
+          INSERT INTO client (id_societe, chiffre_affaires, nb_employes)
+          VALUES (?, ?, ?)
+          """;
 
       pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
       pstmt.setInt(1, societeId);
@@ -362,16 +362,16 @@ public class ClientDao extends SocieteDAO {
       }
 
       LOGGER.log(Level.SEVERE, "Erreur SQL lors de la création du client", e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
-              "create",
-              client.getId(),
-              "Erreur lors de la création du client : " + SQLExceptionAnalyzer.analyze(e),
-              e
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "create",
+          client.getId(),
+          "Erreur lors de la création du client : " + SqlExceptionAnalyzer.analyze(e),
+          e
       );
 
-    } catch (DAOException e) {
-      // ✅ ROLLBACK en cas d'erreur DAO (createSociete peut lever DAOException)
+    } catch (DaoException e) {
+      // ✅ ROLLBACK en cas d'erreur DAO (createSociete peut lever DaoException)
       if (connection != null) {
         try {
           connection.rollback();
@@ -388,13 +388,28 @@ public class ClientDao extends SocieteDAO {
     }
   }
 
-  public boolean save(Client client) throws DAOException {
+  /**
+   * Supprime un client de la base de données.
+   *
+   * <p>Cette méthode effectue une transaction qui :</p>
+   * <ol>
+   *   <li>Vérifie que le client existe</li>
+   *   <li>Vérifie qu'il n'a pas de contrats (sinon erreur)</li>
+   *   <li>Supprime le client</li>
+   *   <li>Supprime la société associée</li>
+   *   <li>Supprime l'adresse si elle n'est plus référencée</li>
+   * </ol>
+   *
+   * @return true si la suppression a réussi, false si le client n'existe pas
+   * @throws DaoException si une erreur survient ou si le client a des contrats
+   */
+  public boolean save(Client client) throws DaoException {
     if (client == null || client.getId() == null || client.getId() <= 0) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
-              "save",
-              client != null ? client.getId() : null,
-              "Le client doit avoir un ID valide"
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "save",
+          client != null ? client.getId() : null,
+          "Le client doit avoir un ID valide"
       );
     }
 
@@ -408,13 +423,13 @@ public class ClientDao extends SocieteDAO {
       connection.setAutoCommit(false);
 
       // ========== ÉTAPE 1 : Récupérer id_societe ==========
-      Integer societeId = null;
-      String getSocieteIdSQL = "SELECT id_societe FROM client WHERE id_client = ?";
+      String getSocieteIdSql = "SELECT id_societe FROM client WHERE id_client = ?";
 
-      pstmtGetSociete = connection.prepareStatement(getSocieteIdSQL);
+      pstmtGetSociete = connection.prepareStatement(getSocieteIdSql);
       pstmtGetSociete.setInt(1, client.getId());
       rs = pstmtGetSociete.executeQuery();
 
+      Integer societeId = null;
       if (rs.next()) {
         societeId = rs.getInt("id_societe");
       } else {
@@ -429,16 +444,18 @@ public class ClientDao extends SocieteDAO {
 
       // ========== ÉTAPE 2 : Mettre à jour l'adresse ==========
       if (client.getAdresse() != null && client.getAdresse().getId() != null) {
-        adresseDAO.save(client.getAdresse(), connection);
+        adresseDao.save(client.getAdresse(), connection);
       }
 
       // ========== ÉTAPE 3 : Mettre à jour la société ==========
       saveSociete(client, societeId, connection);
 
       // ========== ÉTAPE 4 : Mettre à jour le client ==========
-      String sql = "UPDATE client " +
-              "SET chiffre_affaires = ?, nb_employes = ? " +
-              "WHERE id_client = ?";
+      String sql = """
+          UPDATE client
+          SET chiffre_affaires = ?, nb_employes = ?
+          WHERE id_client = ?
+          """;
 
       pstmtUpdateClient = connection.prepareStatement(sql);
       pstmtUpdateClient.setLong(1, client.getChiffreAffaires());
@@ -451,14 +468,16 @@ public class ClientDao extends SocieteDAO {
         connection.commit();
 
         LOGGER.log(Level.INFO,
-                "Client mis à jour avec succès : ID={0}, Raison sociale={1}, CA={2}, Nb employés={3}",
-                new Object[]{client.getId(), client.getRaisonSociale(),
-                        client.getChiffreAffaires(), client.getNbEmployes()});
+            "Client mis à jour avec succès : ID={0}, "
+                + "Raison sociale={1}, CA={2}, Nb employés={3}",
+            new Object[]{client.getId(), client.getRaisonSociale(),
+                client.getChiffreAffaires(), client.getNbEmployes()});
 
         return true;
       } else {
         connection.rollback();
-        LOGGER.log(Level.WARNING, "Aucune ligne mise à jour pour le client ID={0}", client.getId());
+        LOGGER.log(
+            Level.WARNING, "Aucune ligne mise à jour pour le client ID={0}", client.getId());
         return false;
       }
 
@@ -472,16 +491,17 @@ public class ClientDao extends SocieteDAO {
         }
       }
 
-      LOGGER.log(Level.SEVERE, "Erreur SQL lors de la mise à jour du client ID=" + client.getId(), e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
-              "save",
-              client.getId(),
-              "Erreur lors de la mise à jour du client : " + SQLExceptionAnalyzer.analyze(e),
-              e
+      LOGGER.log(Level.SEVERE, "Erreur SQL lors de la mise à jour du client ID="
+          + client.getId(), e);
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "save",
+          client.getId(),
+          "Erreur lors de la mise à jour du client : " + SqlExceptionAnalyzer.analyze(e),
+          e
       );
 
-    } catch (DAOException e) {
+    } catch (DaoException e) {
       if (connection != null) {
         try {
           connection.rollback();
@@ -519,15 +539,15 @@ public class ClientDao extends SocieteDAO {
    *
    * @param id l'ID du client à supprimer
    * @return true si la suppression a réussi, false si le client n'existe pas
-   * @throws DAOException si une erreur survient ou si le client a des contrats
+   * @throws DaoException si une erreur survient ou si le client a des contrats
    */
-  public boolean delete(Integer id) throws DAOException {
+  public boolean delete(Integer id) throws DaoException {
     if (id == null || id <= 0) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
-              "delete",
-              id,
-              "L'ID doit être un entier positif non null"
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "delete",
+          id,
+          "L'ID doit être un entier positif non null"
       );
     }
 
@@ -545,12 +565,14 @@ public class ClientDao extends SocieteDAO {
       LOGGER.log(Level.FINE, "Début transaction suppression client : ID={0}", id);
 
       // ========== ÉTAPE 1 : Récupérer id_societe et adresse_id ==========
-      String getIdsSQL = "SELECT c.id_societe, s.adresse_id " +
-              "FROM client c " +
-              "INNER JOIN societe s ON c.id_societe = s.id_societe " +
-              "WHERE c.id_client = ?";
+      String getIdsSql = """
+          SELECT c.id_societe, s.adresse_id
+          FROM client c
+          INNER JOIN societe s ON c.id_societe = s.id_societe 
+          WHERE c.id_client = ?
+          """;
 
-      pstmt = connection.prepareStatement(getIdsSQL);
+      pstmt = connection.prepareStatement(getIdsSql);
       pstmt.setInt(1, id);
       rs = pstmt.executeQuery();
 
@@ -558,7 +580,7 @@ public class ClientDao extends SocieteDAO {
         societeId = rs.getInt("id_societe");
         adresseId = rs.getInt("adresse_id");
         LOGGER.log(Level.FINE, "Client trouvé : société ID={0}, adresse ID={1}",
-                new Object[]{societeId, adresseId});
+            new Object[]{societeId, adresseId});
       } else {
         connection.rollback();
         LOGGER.log(Level.WARNING, "Aucun client trouvé avec l'ID {0}", id);
@@ -577,27 +599,28 @@ public class ClientDao extends SocieteDAO {
       if (nbContrats > 0) {
         connection.rollback();
 
-        LOGGER.log(Level.WARNING,
-                "Impossible de supprimer le client ID={0} : {1} contrat(s) associé(s)",
-                new Object[]{id, nbContrats});
+        LOGGER.log(
+            Level.WARNING,
+            "Impossible de supprimer le client ID={0} : {1} contrat(s) associé(s)",
+            new Object[]{id, nbContrats});
 
-        throw new DAOException(
-                DAOException.ErrorCode.FOREIGN_KEY_VIOLATION,
-                "delete",
-                id,
-                String.format(
-                        "Impossible de supprimer le client : %d contrat(s) associé(s). " +
-                                "Veuillez d'abord supprimer les contrats.",
-                        nbContrats
-                )
+        throw new DaoException(
+            DaoException.ErrorCode.FOREIGN_KEY_VIOLATION,
+            "delete",
+            id,
+            String.format(
+                "Impossible de supprimer le client : %d contrat(s) associé(s). "
+                    + "Veuillez d'abord supprimer les contrats.",
+                nbContrats
+            )
         );
       }
 
       LOGGER.log(Level.FINE, "Client sans contrats, suppression autorisée");
 
       // ========== ÉTAPE 3 : Supprimer le client ==========
-      String deleteClientSQL = "DELETE FROM client WHERE id_client = ?";
-      pstmt = connection.prepareStatement(deleteClientSQL);
+      String deleteClientSql = "DELETE FROM client WHERE id_client = ?";
+      pstmt = connection.prepareStatement(deleteClientSql);
       pstmt.setInt(1, id);
 
       int rowsAffected = pstmt.executeUpdate();
@@ -620,18 +643,18 @@ public class ClientDao extends SocieteDAO {
 
       if (adresseEstReferenciee) {
         LOGGER.log(Level.INFO,
-                "Adresse conservée car référencée par d'autres sociétés : ID={0}",
-                adresseId);
+            "Adresse conservée car référencée par d'autres sociétés : ID={0}",
+            adresseId);
       } else {
         // Supprimer l'adresse si elle n'est plus référencée
         try {
-          adresseDAO.deleteAdresse(connection, adresseId);
+          adresseDao.deleteAdresse(connection, adresseId);
           LOGGER.log(Level.FINE, "Adresse supprimée : ID={0}", adresseId);
-        } catch (DAOException e) {
+        } catch (DaoException e) {
           // Si la suppression échoue, on log mais on continue
           LOGGER.log(Level.WARNING,
-                  "Impossible de supprimer l'adresse ID={0} : {1}",
-                  new Object[]{adresseId, e.getMessage()});
+              "Impossible de supprimer l'adresse ID={0} : {1}",
+              new Object[]{adresseId, e.getMessage()});
         }
       }
 
@@ -639,12 +662,13 @@ public class ClientDao extends SocieteDAO {
       connection.commit();
 
       LOGGER.log(Level.INFO,
-              "Client supprimé avec succès : ID client={0}, ID société={1}, Adresse {2}",
-              new Object[]{
-                      id,
-                      societeId,
-                      adresseEstReferenciee ? "conservée (ID=" + adresseId + ")" : "supprimée (ID=" + adresseId + ")"
-              });
+          "Client supprimé avec succès : ID client={0}, ID société={1}, Adresse {2}",
+          new Object[]{
+              id,
+              societeId,
+              adresseEstReferenciee ? "conservée (ID=" + adresseId + ")"
+                  : "supprimée (ID=" + adresseId + ")"
+          });
 
       return true;
 
@@ -660,15 +684,15 @@ public class ClientDao extends SocieteDAO {
       }
 
       LOGGER.log(Level.SEVERE, "Erreur SQL lors de la suppression du client ID=" + id, e);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
-              "delete",
-              id,
-              "Erreur lors de la suppression du client : " + SQLExceptionAnalyzer.analyze(e),
-              e
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "delete",
+          id,
+          "Erreur lors de la suppression du client : " + SqlExceptionAnalyzer.analyze(e),
+          e
       );
 
-    } catch (DAOException e) {
+    } catch (DaoException e) {
       // ✅ ROLLBACK en cas d'erreur DAO
       if (connection != null) {
         try {
@@ -692,26 +716,28 @@ public class ClientDao extends SocieteDAO {
    *
    * @param raisonSociale la raison sociale à rechercher
    * @return le client trouvé ou null si non trouvé
-   * @throws DAOException si une erreur survient lors de la recherche
+   * @throws DaoException si une erreur survient lors de la recherche
    */
-  public Client findByRaisonSociale(String raisonSociale) throws DAOException {
+  public Client findByRaisonSociale(String raisonSociale) throws DaoException {
     if (raisonSociale == null || raisonSociale.trim().isEmpty()) {
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
-              "findByRaisonSociale",
-              null,
-              "La raison sociale ne peut pas être null ou vide"
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "findByRaisonSociale",
+          null,
+          "La raison sociale ne peut pas être null ou vide"
       );
     }
 
-    String sql = "SELECT c.id_client, s.raison_sociale, " +
-            "a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville, " +
-            "s.telephone, s.email, s.commentaires, " +
-            "c.chiffre_affaires, c.nb_employes " +
-            "FROM client c " +
-            "INNER JOIN societe s ON c.id_societe = s.id_societe " +
-            "INNER JOIN adresse a ON s.adresse_id = a.id_adresse " +
-            "WHERE s.raison_sociale = ?";
+    String sql = """
+        SELECT c.id_client, s.raison_sociale,
+        a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville,
+        s.telephone, s.email, s.commentaires,
+        c.chiffre_affaires, c.nb_employes
+        FROM client c
+        INNER JOIN societe s ON c.id_societe = s.id_societe
+        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+        WHERE s.raison_sociale = ?
+        """;
 
     Connection connection = null;
     PreparedStatement pstmt = null;
@@ -729,14 +755,14 @@ public class ClientDao extends SocieteDAO {
 
         } catch (ValidationException e) {
           LOGGER.log(Level.SEVERE,
-                  "Erreur validation données client avec raison sociale ''{0}''",
-                  raisonSociale);
-          throw new DAOException(
-                  DAOException.ErrorCode.INVALID_PARAMETER,
-                  "findByRaisonSociale",
-                  null,
-                  "Données invalides pour le client : " + e.getMessage(),
-                  e
+              "Erreur validation données client avec raison sociale ''{0}''",
+              raisonSociale);
+          throw new DaoException(
+              DaoException.ErrorCode.INVALID_PARAMETER,
+              "findByRaisonSociale",
+              null,
+              "Données invalides pour le client : " + e.getMessage(),
+              e
           );
         }
       }
@@ -745,14 +771,14 @@ public class ClientDao extends SocieteDAO {
 
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE,
-              "Erreur SQL lors de findByRaisonSociale avec ''{0}''",
-              raisonSociale);
-      throw new DAOException(
-              SQLExceptionAnalyzer.categorize(e),
-              "findByRaisonSociale",
-              null,
-              "Erreur lors de la recherche par raison sociale : " + SQLExceptionAnalyzer.analyze(e),
-              e
+          "Erreur SQL lors de findByRaisonSociale avec ''{0}''",
+          raisonSociale);
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "findByRaisonSociale",
+          null,
+          "Erreur lors de la recherche par raison sociale : " + SqlExceptionAnalyzer.analyze(e),
+          e
       );
     } finally {
       closeResources(rs, pstmt, connection);
@@ -760,7 +786,7 @@ public class ClientDao extends SocieteDAO {
   }
 
 
-// ========== MÉTHODES PRIVÉES UTILITAIRES ==========
+  // ========== MÉTHODES PRIVÉES UTILITAIRES ==========
 
   /**
    * Compte le nombre de contrats associés à un client.
@@ -772,7 +798,8 @@ public class ClientDao extends SocieteDAO {
    * @return le nombre de contrats associés au client
    * @throws SQLException si une erreur survient
    */
-  private int countContratsByClientId(Connection connection, Integer clientId) throws SQLException {
+  private int countContratsByClientId(Connection connection, Integer clientId)
+      throws SQLException {
     String sql = "SELECT COUNT(*) AS nb FROM contrat WHERE client_id = ?";
 
     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -797,7 +824,7 @@ public class ClientDao extends SocieteDAO {
    * @throws SQLException si une erreur survient
    */
   private boolean isAdresseReferencee(Connection connection, Integer adresseId)
-          throws SQLException {
+      throws SQLException {
 
     if (adresseId == null) {
       return false;
@@ -812,8 +839,8 @@ public class ClientDao extends SocieteDAO {
         if (rs.next()) {
           int nbReferences = rs.getInt("nb");
           LOGGER.log(Level.FINE,
-                  "Adresse ID={0} : {1} référence(s) trouvée(s)",
-                  new Object[]{adresseId, nbReferences});
+              "Adresse ID={0} : {1} référence(s) trouvée(s)",
+              new Object[]{adresseId, nbReferences});
           return nbReferences > 0;
         }
       }
@@ -828,9 +855,10 @@ public class ClientDao extends SocieteDAO {
    * @param rs le ResultSet positionné sur une ligne client
    * @return le client mappé
    * @throws SQLException si erreur d'accès aux données du ResultSet
-   * @throws DAOException si les données sont invalides (ValidationException encapsulée)
+   * @throws DaoException si les données sont invalides (ValidationException encapsulée)
    */
-  private Client mapResultSetToClient(ResultSet rs) throws SQLException, DAOException, ValidationException {
+  private Client mapResultSetToClient(ResultSet rs)
+      throws SQLException, DaoException, ValidationException {
     try {
       // ========== Données Client ==========
       Integer clientId = rs.getInt("id_client");
@@ -855,13 +883,13 @@ public class ClientDao extends SocieteDAO {
 
       // ========== Créer le Client ==========
       Client client = new Client(
-              raisonSociale,
-              adresse,
-              telephone,
-              email,
-              commentaires,
-              chiffreAffaires,
-              nbEmployes
+          raisonSociale,
+          adresse,
+          telephone,
+          email,
+          commentaires,
+          chiffreAffaires,
+          nbEmployes
       );
 
       client.setId(clientId);
@@ -870,12 +898,12 @@ public class ClientDao extends SocieteDAO {
 
     } catch (ValidationException e) {
       LOGGER.log(Level.SEVERE, "Erreur de validation lors du mapping du client", e);
-      throw new DAOException(
-              DAOException.ErrorCode.INVALID_PARAMETER,
-              "mapResultSetToClient",
-              null,
-              "Données invalides lors du mapping du client : " + e.getMessage(),
-              e
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "mapResultSetToClient",
+          null,
+          "Données invalides lors du mapping du client : " + e.getMessage(),
+          e
       );
     }
   }

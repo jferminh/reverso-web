@@ -1,5 +1,8 @@
 package com.julio.util;
 
+/**
+ * RegexPatterns.
+ */
 public class RegexPatterns {
   public static final String CODE_POSTAL = "^\\d{5}$";
   public static final String TELEPHONE = "^(?:(?:\\+|00)33|0)\\s*[1-9](?:[\\s.-]*\\d{2}){4}$";

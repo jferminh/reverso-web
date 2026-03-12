@@ -1,5 +1,7 @@
 package com.julio.dao;
 
+import static com.julio.service.LoggingService.LOGGER;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -8,12 +10,10 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import static com.julio.service.LoggingService.LOGGER;
-
 /**
  * Classe singleton pour gérer la connexion à la base de données MySQL.
- * <p>
- * Cette classe implémente le design pattern Singleton pour garantir qu'une seule
+ *
+ * <p>Cette classe implémente le design pattern Singleton pour garantir qu'une seule
  * instance de connexion existe dans toute l'application. Elle charge la configuration
  * depuis le fichier database.properties et gère les erreurs de connexion avec des logs.
  *
@@ -55,8 +55,8 @@ public class DatabaseConnexion {
   private void loadProperties() throws IOException {
     Properties properties = new Properties();
 
-    try (InputStream input = this.getClass().getClassLoader().
-            getResourceAsStream("database.properties")) {
+    try (InputStream input = this.getClass().getClassLoader()
+        .getResourceAsStream("database.properties")) {
 
       if (input == null) {
         String errorMsg = "Fichier database.properties introuvable";
@@ -145,6 +145,10 @@ public class DatabaseConnexion {
     return connexion;
   }
 
+  /**
+   * Retourne l'objet Connection pour exécuter des requêtes SQL.
+   *
+   */
   public void closeConnection() throws SQLException {
     try {
       if (connexion != null && !connexion.isClosed()) {

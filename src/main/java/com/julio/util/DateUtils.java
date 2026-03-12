@@ -6,8 +6,8 @@ import java.time.format.ResolverStyle;
 
 /**
  * Classe utilitaire pour la gestion et le formatage des dates dans l'application.
- * <p>
- * Cette classe fournit un formateur de dates standardisé et des méthodes de parsing
+ *
+ * <p>Cette classe fournit un formateur de dates standardisé et des méthodes de parsing
  * pour garantir la cohérence du format des dates à travers toute l'application.
  * Le format utilisé est le format français standard "dd/MM/yyyy" avec validation stricte.
  * </p>
@@ -32,8 +32,8 @@ public class DateUtils {
 
   /**
    * Formateur de dates standardisé pour toute l'application.
-   * <p>
-   * Ce formateur utilise le format français "dd/MM/uuuu" (jour/mois/année sur 4 chiffres)
+   *
+   * <p>Ce formateur utilise le format français "dd/MM/uuuu" (jour/mois/année sur 4 chiffres)
    * avec une validation stricte ({@link ResolverStyle#STRICT}) qui rejette les dates
    * invalides comme le 31 février ou le 30 février.
    * </p>
@@ -47,13 +47,13 @@ public class DateUtils {
    * @see ResolverStyle#STRICT
    */
   public static final DateTimeFormatter FORMATTER =
-          DateTimeFormatter.ofPattern("dd/MM/uuuu")
-                  .withResolverStyle(ResolverStyle.STRICT);
+      DateTimeFormatter.ofPattern("dd/MM/uuuu")
+          .withResolverStyle(ResolverStyle.STRICT);
 
   /**
    * Parse une chaîne de caractères en objet {@link LocalDate}.
-   * <p>
-   * Cette méthode utilise le formateur {@link #FORMATTER} pour convertir
+   *
+   * <p>Cette méthode utilise le formateur {@link #FORMATTER} pour convertir
    * une date textuelle au format "dd/MM/yyyy" en objet LocalDate.
    * La validation stricte garantit que seules les dates réellement valides
    * sont acceptées.
@@ -63,7 +63,7 @@ public class DateUtils {
    *                   (ne doit pas être null)
    * @return un objet LocalDate correspondant à la date parsée
    * @throws java.time.format.DateTimeParseException si la chaîne ne respecte pas
-   *                                                 le format attendu ou si la date est invalide (ex: 31/02/2025)
+   *              le format attendu ou si la date est invalide (ex: 31/02/2025)
    * @throws NullPointerException                    si dateString est null
    * @see #FORMATTER
    */

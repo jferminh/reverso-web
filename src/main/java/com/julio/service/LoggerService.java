@@ -2,12 +2,16 @@ package com.julio.service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.*;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * Utilitaire pour configurer et gérer les logs de l'application de manière centralisée.
- * <p>
- * Charge la configuration depuis logging.properties au démarrage.
+ *
+ * <p>Charge la configuration depuis logging.properties au démarrage.
  * Fournit un accès simplifié aux loggers par classe.
  * </p>
  *
@@ -19,18 +23,14 @@ public class LoggerService {
   private static final String CONFIG_FILE = "/logging.properties";
   private static boolean isConfigured = false;
 
-  /**
-   * Bloc statique d'initialisation.
-   * Charge automatiquement la configuration au premier accès à la classe.
-   */
   static {
     configure();
   }
 
   /**
    * Configure le système de logging depuis logging.properties.
-   * <p>
-   * Cette méthode est thread-safe et ne s'exécute qu'une seule fois.
+   *
+   * <p>Cette méthode est thread-safe et ne s'exécute qu'une seule fois.
    * </p>
    */
   private static synchronized void configure() {
@@ -71,8 +71,8 @@ public class LoggerService {
 
   /**
    * Obtient un logger configuré pour une classe donnée.
-   * <p>
-   * Le logger hérite de la configuration définie dans logging.properties.
+   *
+   * <p>Le logger hérite de la configuration définie dans logging.properties.
    * </p>
    *
    * @param clazz la classe pour laquelle obtenir un logger
@@ -85,8 +85,8 @@ public class LoggerService {
 
   /**
    * Formatter personnalisé pour les logs.
-   * <p>
-   * Format : {@code yyyy-MM-dd HH:mm:ss.SSS LEVEL [ClassName.methodName] - Message}
+   *
+   * <p>Format : {@code yyyy-MM-dd HH:mm:ss.SSS LEVEL [ClassName.methodName] - Message}
    * </p>
    */
   public static class CustomFormatter extends Formatter {
@@ -99,7 +99,7 @@ public class LoggerService {
 
       // Date et heure avec millisecondes
       sb.append(java.time.LocalDateTime.now()
-              .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
+          .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
       sb.append(" ");
 
       // Niveau (aligné sur 7 caractères)

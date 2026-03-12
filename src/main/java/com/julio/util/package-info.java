@@ -1,7 +1,7 @@
 /**
  * Package contenant les classes utilitaires de l'application.
- * <p>
- * Ce package regroupe des utilitaires transverses utilisés dans toute
+ *
+ * <p>Ce package regroupe des utilitaires transverses utilisés dans toute
  * l'application pour standardiser le traitement de certains types de données,
  * l'affichage des messages utilisateur et éviter la duplication de code.
  * </p>

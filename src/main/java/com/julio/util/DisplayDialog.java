@@ -17,7 +17,7 @@ public class DisplayDialog {
    * @param message contenu du message
    */
   public static void messageInfo(String titre, Object message) {
-//        JOptionPane.showMessageDialog(null, message, titre, JOptionPane.INFORMATION_MESSAGE);
+
   }
 
   /**
@@ -27,7 +27,7 @@ public class DisplayDialog {
    * @param message contenu du message
    */
   public static void messageWarning(String titre, Object message) {
-//        JOptionPane.showMessageDialog(null, message, titre, JOptionPane.WARNING_MESSAGE);
+
   }
 
   /**
@@ -37,7 +37,7 @@ public class DisplayDialog {
    * @param message contenu du message
    */
   public static void messageError(String titre, Object message) {
-//        JOptionPane.showMessageDialog(null, message, titre, JOptionPane.ERROR_MESSAGE);
+
   }
 }
 

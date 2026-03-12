@@ -6,8 +6,8 @@ import java.util.logging.Logger;
 
 /**
  * Service centralisé de gestion des logs de l'application.
- * <p>
- * Cette classe fournit un {@link Logger} unique et configuré pour toute l'application,
+ *
+ * <p>Cette classe fournit un {@link Logger} unique et configuré pour toute l'application,
  * avec écriture automatique dans un fichier de log. Elle utilise le formateur personnalisé
  * {@link FormatterLog} pour structurer les entrées de log selon les besoins métier.
  * </p>
@@ -41,14 +41,14 @@ import java.util.logging.Logger;
 public class LoggingService {
 
   /**
-   * Chemin du fichier de log dans le répertoire logs/
+   * Chemin du fichier de log dans le répertoire logs/.
    */
   private static final String LOG_FILE = "logs/application.log";
 
   /**
    * Logger statique global utilisé par toute l'application.
-   * <p>
-   * Ce logger doit être initialisé via {@link #intFichierLog()} avant
+   *
+   * <p>Ce logger doit être initialisé via {@link #intFichierLog()} avant
    * utilisation pour garantir l'écriture dans le fichier de log avec
    * le format personnalisé.
    * </p>
@@ -57,8 +57,8 @@ public class LoggingService {
 
   /**
    * Initialise le système de logging avec écriture dans un fichier.
-   * <p>
-   * Cette méthode doit être appelée au démarrage de l'application, généralement
+   *
+   * <p>Cette méthode doit être appelée au démarrage de l'application, généralement
    * dans la méthode {@code main()} ou dans un bloc d'initialisation. Elle configure :
    * </p>
    * <ol>

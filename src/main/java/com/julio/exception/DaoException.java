@@ -1,12 +1,23 @@
 package com.julio.exception;
 
-public class DAOException extends Exception {
+/**
+ * Exception de base pour toutes les erreurs liées aux opérations DAO.
+ * Permet de distinguer les erreurs DAO des autres exceptions de l'application.
+ *
+ * @author Julio FERMIN
+ * @version 2.0
+ * @since 15/01/2026
+ */
+public class DaoException extends Exception {
 
   private final ErrorCode errorCode;
   private final String operation;
   private final Object entityId;
 
-  public DAOException(String message) {
+  /**
+   * Constructeur avec message simple.
+   */
+  public DaoException(String message) {
     super(message);
     this.errorCode = ErrorCode.GENERAL_ERROR;
 
@@ -14,7 +25,10 @@ public class DAOException extends Exception {
     this.entityId = null;
   }
 
-  public DAOException(String message, Throwable cause) {
+  /**
+   * Constructeur avec message et cause.
+   */
+  public DaoException(String message, Throwable cause) {
     super(message, cause);
     this.errorCode = ErrorCode.GENERAL_ERROR;
     this.operation = null;
@@ -24,7 +38,8 @@ public class DAOException extends Exception {
   /**
    * Constructeur complet avec code d'erreur, opération et ID de l'entité.
    */
-  public DAOException(ErrorCode errorCode, String operation, Object entityId, String message, Throwable cause) {
+  public DaoException(ErrorCode errorCode, String operation,
+                      Object entityId, String message, Throwable cause) {
     super(message, cause);
     this.errorCode = errorCode;
     this.operation = operation;
@@ -34,7 +49,7 @@ public class DAOException extends Exception {
   /**
    * Constructeur complet sans cause.
    */
-  public DAOException(ErrorCode errorCode, String operation, Object entityId, String message) {
+  public DaoException(ErrorCode errorCode, String operation, Object entityId, String message) {
     super(message);
     this.errorCode = errorCode;
     this.operation = operation;
@@ -56,7 +71,7 @@ public class DAOException extends Exception {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("DAOException{");
+    sb.append("DaoException{");
     sb.append("errorCode=").append(errorCode);
     if (operation != null) {
       sb.append(", operation='").append(operation).append('\'');
@@ -69,6 +84,9 @@ public class DAOException extends Exception {
     return sb.toString();
   }
 
+  /**
+   * Codes d'erreur pour catégoriser les erreurs DAO.
+   */
   public enum ErrorCode {
     // Erreurs de connexion
     CONNECTION_ERROR("Erreur de connexion à la base de données"),
@@ -88,7 +106,6 @@ public class DAOException extends Exception {
     // Erreurs métier
     ENTITY_NOT_FOUND("Entité introuvable"),
     INVALID_PARAMETER("Paramètre invalide"),
-//        NOT_FOUND("Aucune enregistrement trouvée"),
 
     // Erreurs générales
     TRANSACTION_ERROR("Erreur de transaction"),

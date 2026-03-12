@@ -1,7 +1,6 @@
 package com.julio.util;
 
-import com.julio.exception.DAOException;
-
+import com.julio.exception.DaoException;
 import java.sql.SQLException;
 
 /**
@@ -13,20 +12,20 @@ import java.sql.SQLException;
  * @version 2.0
  * @since 19/01/2026
  */
-public final class SQLExceptionAnalyzer {
+public final class SqlExceptionAnalyzer {
 
   /**
    * Constructeur privé pour empêcher l'instanciation.
    * Cette classe contient uniquement des méthodes statiques.
    */
-  private SQLExceptionAnalyzer() {
+  private SqlExceptionAnalyzer() {
     throw new AssertionError("Cette classe utilitaire ne doit pas être instanciée");
   }
 
   /**
    * Analyse une SQLException pour fournir un message d'erreur détaillé et compréhensible.
-   * <p>
-   * Cette méthode examine le SQLState de l'exception et retourne un message
+   *
+   * <p>Cette méthode examine le SQLState de l'exception et retourne un message
    * adapté selon le type d'erreur rencontré.
    *
    * @param e l'exception SQL à analyser
@@ -105,16 +104,16 @@ public final class SQLExceptionAnalyzer {
 
   /**
    * Catégorise une SQLException en ErrorCode métier.
-   * <p>
-   * Cette méthode examine le SQLState de l'exception et retourne le code
+   *
+   * <p>Cette méthode examine le SQLState de l'exception et retourne le code
    * d'erreur métier le plus approprié pour faciliter le traitement côté application.
    *
    * @param e l'exception SQL à catégoriser
    * @return le code d'erreur métier correspondant
    */
-  public static DAOException.ErrorCode categorize(SQLException e) {
+  public static DaoException.ErrorCode categorize(SQLException e) {
     if (e == null) {
-      return DAOException.ErrorCode.GENERAL_ERROR;
+      return DaoException.ErrorCode.GENERAL_ERROR;
     }
 
     String sqlState = e.getSQLState();
@@ -124,29 +123,29 @@ public final class SQLExceptionAnalyzer {
       if (sqlState.startsWith("23")) {
         // Contraintes d'intégrité
         if (sqlState.equals("23503") || sqlState.contains("foreign")) {
-          return DAOException.ErrorCode.FOREIGN_KEY_VIOLATION;
+          return DaoException.ErrorCode.FOREIGN_KEY_VIOLATION;
         } else if (sqlState.equals("23505") || sqlState.contains("unique")) {
-          return DAOException.ErrorCode.UNIQUE_CONSTRAINT_VIOLATION;
+          return DaoException.ErrorCode.UNIQUE_CONSTRAINT_VIOLATION;
         } else if (sqlState.equals("23502") || sqlState.contains("null")) {
-          return DAOException.ErrorCode.NOT_NULL_VIOLATION;
+          return DaoException.ErrorCode.NOT_NULL_VIOLATION;
         } else if (sqlState.equals("23514") || sqlState.contains("check")) {
-          return DAOException.ErrorCode.CHECK_CONSTRAINT_VIOLATION;
+          return DaoException.ErrorCode.CHECK_CONSTRAINT_VIOLATION;
         }
         // Par défaut pour les erreurs 23xxx
-        return DAOException.ErrorCode.CHECK_CONSTRAINT_VIOLATION;
+        return DaoException.ErrorCode.CHECK_CONSTRAINT_VIOLATION;
 
       } else if (sqlState.startsWith("08")) {
         // Problèmes de connexion
-        return DAOException.ErrorCode.CONNECTION_ERROR;
+        return DaoException.ErrorCode.CONNECTION_ERROR;
 
       } else if (sqlState.startsWith("40")) {
         // Problèmes de transaction
-        return DAOException.ErrorCode.TRANSACTION_ERROR;
+        return DaoException.ErrorCode.TRANSACTION_ERROR;
       }
     }
 
     // Par défaut
-    return DAOException.ErrorCode.GENERAL_ERROR;
+    return DaoException.ErrorCode.GENERAL_ERROR;
   }
 
   /**
@@ -168,9 +167,9 @@ public final class SQLExceptionAnalyzer {
     String message = e.getMessage();
     if (message != null) {
       String lowerMessage = message.toLowerCase();
-      return lowerMessage.contains("foreign key") ||
-              lowerMessage.contains("constraint") ||
-              lowerMessage.contains("référence");
+      return lowerMessage.contains("foreign key")
+          || lowerMessage.contains("constraint")
+          || lowerMessage.contains("référence");
     }
 
     return false;
@@ -195,8 +194,7 @@ public final class SQLExceptionAnalyzer {
     String message = e.getMessage();
     if (message != null) {
       String lowerMessage = message.toLowerCase();
-      return lowerMessage.contains("unique") ||
-              lowerMessage.contains("duplicate");
+      return lowerMessage.contains("unique") || lowerMessage.contains("duplicate");
     }
 
     return false;
@@ -217,11 +215,11 @@ public final class SQLExceptionAnalyzer {
 
     // Patterns courants pour MySQL, PostgreSQL, H2
     String[] patterns = {
-            "constraint `(.+?)`",      // MySQL
-            "constraint \"(.+?)\"",    // PostgreSQL
-            "constraint '(.+?)'",      // Variante
-            "constraint \\[(.+?)\\]",  // H2
-            "CONSTRAINT_(.+?)_",       // Variante H2
+      "constraint `(.+?)`",      // MySQL
+      "constraint \"(.+?)\"",    // PostgreSQL
+      "constraint '(.+?)'",      // Variante
+      "constraint \\[(.+?)\\]",  // H2
+      "CONSTRAINT_(.+?)_",       // Variante H2
     };
 
     for (String pattern : patterns) {
