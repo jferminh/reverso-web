@@ -9,11 +9,14 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Classe abstraite parente de Client et Prospect.
@@ -24,8 +27,10 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
 @EqualsAndHashCode(of = "id")
+@SuperBuilder
 public abstract class Societe implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
@@ -49,26 +54,6 @@ public abstract class Societe implements Serializable {
   private String email;
 
   private String commentaires;
-
-  /**
-   * Constructeur principal de la classe Societe.
-   * Initialise une société avec validation des données obligatoires.
-   *
-   * @param raisonSociale raison sociale de la société (ne peut pas être vide)
-   * @param adresse       adresse complète de la société (ne peut pas être null)
-   * @param telephone     numéro de téléphone (doit respecter le format validé)
-   * @param email         adresse email (doit respecter le format validé)
-   * @param commentaires  notes additionnelles (peut être null ou vide)
-   */
-  public Societe(String raisonSociale, Adresse adresse,
-                 String telephone, String email,
-                 String commentaires) {
-    this.raisonSociale = raisonSociale;
-    this.adresse = adresse;
-    this.telephone = telephone;
-    this.email = email;
-    this.commentaires = commentaires;
-  }
 
   /**
    * Retourne le type spécifique de société.

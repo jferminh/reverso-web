@@ -7,11 +7,13 @@ import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 /**
  * JavaBean représentant un client.
@@ -23,8 +25,9 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper=true)
-@EqualsAndHashCode(callSuper=true, of = {})
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true, of = {})
+@SuperBuilder
 public class Client extends Societe {
   @Serial
   private static final long serialVersionUID = 1L;
