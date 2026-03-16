@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Accueil — Reverso CRM</title>
+    <title>Accueil Reverso CRM</title>
 </head>
 <body>
 <h1>Bienvenue sur Reverso CRM</h1>

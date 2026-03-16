@@ -874,7 +874,13 @@ public class ClientDao extends SocieteDao {
       String codePostal = rs.getString("code_postal");
       String ville = rs.getString("ville");
 
-      Adresse adresse = new Adresse(numeroRue, nomRue, codePostal, ville);
+      /*Adresse adresse = new Adresse(numeroRue, nomRue, codePostal, ville);*/
+      Adresse adresse = Adresse.builder()
+          .numeroRue(numeroRue)
+          .nomRue(nomRue)
+          .codePostal(codePostal)
+          .ville(ville)
+          .build();
       adresse.setId(adresseId);
 
       // ========== Données spécifiques Client ==========
@@ -882,21 +888,20 @@ public class ClientDao extends SocieteDao {
       int nbEmployes = rs.getInt("nb_employes");
 
       // ========== Créer le Client ==========
-      Client client = new Client(
-          raisonSociale,
-          adresse,
-          telephone,
-          email,
-          commentaires,
-          chiffreAffaires,
-          nbEmployes
-      );
+      Client client = Client.builder()
+          .raisonSociale(raisonSociale)
+          .adresse(adresse)
+          .telephone(telephone)
+          .email(email)
+          .commentaires(commentaires)
+          .chiffreAffaires(chiffreAffaires)
+          .nbEmployes(nbEmployes).build();
 
       client.setId(clientId);
 
       return client;
 
-    } catch (ValidationException e) {
+    } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Erreur de validation lors du mapping du client", e);
       throw new DaoException(
           DaoException.ErrorCode.INVALID_PARAMETER,

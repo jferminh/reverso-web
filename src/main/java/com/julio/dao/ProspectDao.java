@@ -46,10 +46,10 @@ import java.util.logging.Logger;
  *
  * @author Julio FERMIN
  * @version 2.0
- * @since 15/01/2026
  * @see Prospect
  * @see Interesse
  * @see DaoException
+ * @since 13/03/2026
  */
 public class ProspectDao extends SocieteDao {
 
@@ -719,7 +719,13 @@ public class ProspectDao extends SocieteDao {
       String codePostal = rs.getString("code_postal");
       String ville = rs.getString("ville");
 
-      Adresse adresse = new Adresse(numeroRue, nomRue, codePostal, ville);
+      /*Adresse adresse = new Adresse(numeroRue, nomRue, codePostal, ville);*/
+      Adresse adresse = Adresse.builder()
+          .numeroRue(numeroRue)
+          .nomRue(nomRue)
+          .codePostal(codePostal)
+          .ville(ville)
+          .build();
       adresse.setId(adresseId);
 
       // Prospect spécifique
@@ -730,21 +736,21 @@ public class ProspectDao extends SocieteDao {
       Interesse interesse = Interesse.fromInt(interesseInt);
 
       // Créer le prospect
-      Prospect prospect = new Prospect(
-          raisonSociale,
-          adresse,
-          telephone,
-          email,
-          commentaires,
-          dateProspection,
-          interesse
-      );
+      Prospect prospect = Prospect.builder()
+          .raisonSociale(raisonSociale)
+          .adresse(adresse)
+          .telephone(telephone)
+          .email(email)
+          .commentaires(commentaires)
+          .dateProspection(dateProspection)
+          .interesse(interesse)
+          .build();
 
       prospect.setId(prospectId);
 
       return prospect;
 
-    } catch (ValidationException e) {
+    } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Erreur de validation lors du mapping du prospect", e);
       throw new DaoException(
           DaoException.ErrorCode.INVALID_PARAMETER,
