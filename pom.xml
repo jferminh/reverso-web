@@ -50,13 +50,19 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
         <!-- JSTL — Tags JSP pour boucles, conditions dans les vues
              scope=runtime : pas besoin à la compilation, inclus dans le WAR -->
         <dependency>
             <groupId>org.glassfish.web</groupId>
             <artifactId>jakarta.servlet.jsp.jstl</artifactId>
             <version>${jstl.version}</version>
-            <scope>runtime</scope>
+            <!--<scope>runtime</scope>-->
         </dependency>
 
         <!-- MySQL Connector — connexion JDBC à la base de données -->

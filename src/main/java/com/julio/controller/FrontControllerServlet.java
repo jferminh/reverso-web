@@ -1,5 +1,6 @@
 package com.julio.controller;
 
+import com.julio.controller.client.ListClientsCommand;
 import com.julio.controller.common.AccueilCommand;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -103,7 +104,7 @@ public class FrontControllerServlet extends HttpServlet {
     commands.put("accueil", new AccueilCommand());
 
     // 2) Commandes Clients (à implémenter ensuite)
-    // commands.put("listClients", new ListClientsCommand());
+    commands.put("listClients", new ListClientsCommand());
     // commands.put("createClient", new CreateClientCommand());
     // commands.put("saveClient", new SaveClientCommand());
     // etc.

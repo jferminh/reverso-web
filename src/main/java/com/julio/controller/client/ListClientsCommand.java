@@ -5,7 +5,9 @@ import com.julio.dao.ClientDao;
 import com.julio.model.Client;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,6 +25,12 @@ public class ListClientsCommand implements Icommand {
 
     ClientDao clientDao = new ClientDao();
     List<Client> clients = clientDao.findAll();
+
+    // ✅ Défense : findAll() ne doit jamais retourner null
+    if (clients == null) {
+      log.warn("ClientDao.findAll() a retourné null - liste vide utilisée par défault");
+      clients = new ArrayList<>();
+    }
     request.setAttribute("clients", clients);
     request.setAttribute("bbClients", clients.size());
 
