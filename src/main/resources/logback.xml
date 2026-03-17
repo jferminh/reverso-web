@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- =====================================================
+         APPENDERS — où écrire les logs
+         ===================================================== -->
+
+    <!-- Console (développement) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Pattern : date | niveau | thread | logger court | message -->
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Fichier rotatif (production) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/reverso-web.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Rotation quotidienne, conservation 30 jours -->
+            <fileNamePattern>logs/reverso-web.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <!-- Pattern complet pour fichier : inclut le nom de classe complet -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- =====================================================
+         LOGGERS — niveaux par package
+         ===================================================== -->
+
+    <!-- application : DEBUG en développement, INFO en production -->
+    <logger name="com.julio" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- DAO : DEBUG pour voir les requêtes SQL -->
+    <logger name="com.julio.dao" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Librairies tierces : seulement WARN pour ne pas polluer les logs -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="jakarta"       level="WARN"/>
+
+    <!-- Root logger : WARN par défaut pour tout le reste -->
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

@@ -86,7 +86,8 @@ public class ClientDao extends SocieteDao {
   public List<Client> findAll() throws DaoException {
     Map<Integer, Client> clientsMap = new LinkedHashMap<>();
 
-    String sql = """
+    String sql =
+        """
         SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone, s.email,
         s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
         a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat, 
@@ -164,7 +165,6 @@ public class ClientDao extends SocieteDao {
     }
   }
 
-
   /**
    * Recherche un client par son identifiant avec ses contrats.
    *
@@ -185,7 +185,8 @@ public class ClientDao extends SocieteDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone,
         s.email, s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
         a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat,
@@ -314,7 +315,8 @@ public class ClientDao extends SocieteDao {
       Integer societeId = createSociete(client);
 
       // ========== ÉTAPE 2 : Insérer la partie client ==========
-      String sql = """
+      String sql =
+          """
           INSERT INTO client (id_societe, chiffre_affaires, nb_employes)
           VALUES (?, ?, ?)
           """;
@@ -451,7 +453,8 @@ public class ClientDao extends SocieteDao {
       saveSociete(client, societeId, connection);
 
       // ========== ÉTAPE 4 : Mettre à jour le client ==========
-      String sql = """
+      String sql =
+          """
           UPDATE client
           SET chiffre_affaires = ?, nb_employes = ?
           WHERE id_client = ?
@@ -524,7 +527,6 @@ public class ClientDao extends SocieteDao {
     }
   }
 
-
   /**
    * Supprime un client de la base de données.
    *
@@ -565,7 +567,8 @@ public class ClientDao extends SocieteDao {
       LOGGER.log(Level.FINE, "Début transaction suppression client : ID={0}", id);
 
       // ========== ÉTAPE 1 : Récupérer id_societe et adresse_id ==========
-      String getIdsSql = """
+      String getIdsSql =
+          """
           SELECT c.id_societe, s.adresse_id
           FROM client c
           INNER JOIN societe s ON c.id_societe = s.id_societe 
@@ -728,7 +731,8 @@ public class ClientDao extends SocieteDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         SELECT c.id_client, s.raison_sociale,
         a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville,
         s.telephone, s.email, s.commentaires,
@@ -784,7 +788,6 @@ public class ClientDao extends SocieteDao {
       closeResources(rs, pstmt, connection);
     }
   }
-
 
   // ========== MÉTHODES PRIVÉES UTILITAIRES ==========
 

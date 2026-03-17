@@ -28,10 +28,12 @@
         <jakartaee.version>11.0.0</jakartaee.version>
         <tomcat.version>11.0.18</tomcat.version>
         <jstl.version>3.0.1</jstl.version>
-        <mysql.version>8.3.0</mysql.version>
+        <mysql.version>9.6.0</mysql.version>
         <junit.version>5.13.2</junit.version>
-        <hibernate.validator.version>9.0.0.Final</hibernate.validator.version>
-        <lombok.version>1.18.42</lombok.version>
+        <hibernate.validator.version>9.1.0.Final</hibernate.validator.version>
+        <lombok.version>1.18.44</lombok.version>
+        <checkstyle.version>13.3.0</checkstyle.version>
+        <slf4j.version>2.0.17</slf4j.version>
     </properties>
 
     <!-- ==========================================
@@ -107,6 +109,31 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- LOGGING : Pattern Façade SLF4J + Logback -->
+        <!-- Façade : API commune, le code ne dépend jamais de l'implémentation -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Implémentation : Logback (remplace JUL, Log4j, etc.) -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.18</version>
+            <!-- runtime : absent du code source, présent dans le WAR -->
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Bridge JUL → SLF4J : redirige les logs internes de Tomcat vers Logback -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
     </dependencies>
@@ -190,7 +217,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>10.21.2</version>
+                        <version>${checkstyle.version}</version>
                     </dependency>
                 </dependencies>
                 <configuration>

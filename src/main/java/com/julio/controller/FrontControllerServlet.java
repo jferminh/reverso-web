@@ -12,17 +12,16 @@ import jakarta.validation.ValidatorFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Front Controller — unique servlet de l'application.
  * Toutes les requêtes passent par /app et sont dispatchées
  * vers une ICommand via une HashMap cmd → ICommand.
  */
+@Slf4j
 @WebServlet(name = "FrontController", urlPatterns = {"/app"})
 public class FrontControllerServlet extends HttpServlet {
-  private static final Logger LOGGER =
-      Logger.getLogger(FrontControllerServlet.class.getName());
 
   private static final String VUE_ERREUR = "/WEB-INF/views/common/erreur.jsp";
 
@@ -59,29 +58,40 @@ public class FrontControllerServlet extends HttpServlet {
     try {
       Icommand command = commands.get(cmd);
       if (command == null) {
-        LOGGER.warning("Commande inconnue ou null, cmd=[" + cmd + "]");
-        // fallback temporaire : on utilisera AccueilCommand plus tard
-        request.setAttribute("erreurMessage", "Commande inconnue : " + cmd);
+        // ✅ WARN : situation anormale, mais récupérable (fallback accueil)
+        log.warn("Commande inconnue reçue - cmd= '{}', fallback vers accueil", cmd);
+        command = commands.get(null);
 
       } else {
-        vue = command.execute(request, response);
+        // ✅ DEBUG : détail utile en développement, silencieux en production
+        log.debug("Dispatch - cmd='{}' vers {}", cmd, command.getClass().getSimpleName());
       }
+
+      vue = command.execute(request, response);
+
     } catch (Exception ex) {
-      LOGGER.severe("Erreur lors de l'exécution de la commande [" + cmd + "] : "
-          + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+      log.error("Erreur lors de la 'exécution de la commande cmd='{}' - {}",
+          cmd, ex.getMessage(), ex);
       request.setAttribute("erreurMessage", ex.getMessage());
       vue = VUE_ERREUR;
+
     } finally {
       // Si aucune redirection n'a été faite, on forward
       if (!response.isCommitted()) {
-        request.getRequestDispatcher(vue).forward(request, response);
+        try {
+          request.getRequestDispatcher(vue).forward(request, response);
+
+        } catch (Exception ex) {
+          log.error("Erreur lors du forward vers '{}' - {}", vue, ex.getMessage(), ex);
+        }
       }
     }
   }
 
   @Override
   public void destroy() {
-    LOGGER.info("FrontControllerServlet détruit");
+    // ✅ INFO : événement de cycle de vie important
+    log.info("FrontController détruit — libération des ressources");
   }
 
   @Override
@@ -107,6 +117,7 @@ public class FrontControllerServlet extends HttpServlet {
     // On le met à disposition des Commands via le ServletContext
     getServletContext().setAttribute("validator", validator);
 
-    LOGGER.info("Front Controller initialisé");
+    log.info("Front Controller initialisé");
+
   }
 }

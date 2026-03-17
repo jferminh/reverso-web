@@ -220,7 +220,8 @@ public abstract class SocieteDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         UPDATE societe
         SET raison_sociale = ?, telephone = ?, email = ?, commentaires = ?
         WHERE id_societe = ?
@@ -360,6 +361,4 @@ public abstract class SocieteDao {
       closeResources(null, pstmt, null);
     }
   }
-
-
 }
