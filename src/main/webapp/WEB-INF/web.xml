@@ -1,6 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
-         version="6.0">
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd"
+         version="6.1">
+
+    <!-- ==========================================
+         1. PAGE D'ACCUEIL
+         ========================================== -->
+    <!--
+        Quand on appelle :
+            http://localhost:8080/reverso-web/
+        Tomcat va appeler l'URL /app (FrontControllerServlet)
+        car /app sera le pattern de ta servlet Front Controller.
+    -->
+    <welcome-file-list>
+        <welcome-file>app</welcome-file>
+    </welcome-file-list>
+
+    <!-- ==========================================
+         2. GESTION DES ERREURS HTTP
+         ========================================== -->
+    <!-- Erreur 404 : ressource non trouvée -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/views/common/erreur.jsp</location>
+    </error-page>
+
+    <!-- Erreur 500 : exception serveur -->
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/views/common/erreur.jsp</location>
+    </error-page>
+
+    <!-- ==========================================
+         3. CONFIGURATION DES SESSIONS
+         ========================================== -->
+    <!-- Durée d'une session utilisateur : 30 minutes -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <!-- ==========================================
+         4. JSP — ENCODAGE + TAGLIBS COMMUNES
+         ========================================== -->
+    <!--
+        On veut :
+        - forcer l'encodage UTF-8
+        - inclure automatiquement un fichier taglibs.jsp
+          dans toutes les JSP (JSTL, directives communes).
+        Ce fichier sera : /WEB-INF/views/common/taglibs.jsp
+    -->
+    <jsp-config>
+        <jsp-property-group>
+            <!-- Toutes les JSP de ton projet -->
+            <url-pattern>*.jsp</url-pattern>
+
+            <!-- Inclus avant le contenu de chaque JSP -->
+            <include-prelude>/WEB-INF/views/common/taglibs.jsp</include-prelude>
+        </jsp-property-group>
+    </jsp-config>
+
 </web-app>

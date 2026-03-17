@@ -20,6 +20,9 @@ import lombok.experimental.SuperBuilder;
  *
  * @author Julio
  * @version 2.0
+ * @since 19/11/2025
+ * @see Societe
+ * @see Contrat
  */
 @Getter
 @Setter
@@ -40,16 +43,8 @@ public class Client extends Societe {
   @Min(value = 1, message = "Le nombre d'employés doit être >= 1")
   private Integer nbEmployes;
 
-  private List<Contrat> contrats;
-
-  /**
-   * Getter liste de contrats.
-   *
-   * @return liste de contrats
-   */
-  public List<Contrat> getContrats() {
-    return new ArrayList<>(contrats);
-  }
+  @Builder.Default
+  private List<Contrat> contrats = new ArrayList<>();
 
   /**
    * Ajoute un contrat à la liste des contrats du client.

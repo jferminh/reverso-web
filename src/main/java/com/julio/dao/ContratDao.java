@@ -82,7 +82,8 @@ public class ContratDao {
   public List<Contrat> findAll() throws DaoException {
     List<Contrat> contrats = new ArrayList<>();
 
-    String sql = """
+    String sql =
+        """
         SELECT id_contrat, client_id, nom_contrat, montant 
         FROM contrat
         ORDER BY id_contrat
@@ -147,7 +148,8 @@ public class ContratDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         SELECT id_contrat, client_id, nom_contrat, montant
         FROM contrat
         WHERE id_contrat = ?
@@ -222,7 +224,8 @@ public class ContratDao {
 
     List<Contrat> contrats = new ArrayList<>();
 
-    String sql = """
+    String sql =
+        """
         SELECT id_contrat, client_id, nom_contrat, montant
         FROM contrat
         WHERE client_id = ?
@@ -292,7 +295,8 @@ public class ContratDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         INSERT INTO contrat (client_id, nom_contrat, montant)
         "VALUES (?, ?, ?)
         """;
@@ -391,7 +395,8 @@ public class ContratDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         UPDATE contrat
         SET nom_contrat = ?, montant = ?
         WHERE id_contrat = ?

@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * @see Prospect
  * @see Interesse
  * @see DaoException
- * @since 15/01/2026
+ * @since 13/03/2026
  */
 public class ProspectDao extends SocieteDao {
 
@@ -79,7 +79,8 @@ public class ProspectDao extends SocieteDao {
   public List<Prospect> findAll() throws DaoException {
     List<Prospect> prospects = new ArrayList<>();
 
-    String sql = """
+    String sql =
+        """
         SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse, 
         s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
         a.numero_rue, a.nom_rue, a.code_postal, a.ville
@@ -141,7 +142,8 @@ public class ProspectDao extends SocieteDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
         s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
         a.numero_rue, a.nom_rue, a.code_postal, a.ville
@@ -377,7 +379,8 @@ public class ProspectDao extends SocieteDao {
       saveSociete(prospect, societeId, connection);
 
       // ========== ÉTAPE 4 : Mettre à jour le prospect ==========
-      String sql = """
+      String sql =
+          """
           UPDATE prospect
           SET date_prospection = ?, interesse = ?
           WHERE id_prospect = ?
@@ -483,7 +486,8 @@ public class ProspectDao extends SocieteDao {
       connection.setAutoCommit(false);
 
       // ========== ÉTAPE 1 : Récupérer id_societe et adresse_id ==========
-      String getIdsSql = """
+      String getIdsSql =
+          """
           SELECT p.id_societe, s.adresse_id 
           FROM prospect p 
           INNER JOIN societe s ON p.id_societe = s.id_societe
@@ -571,7 +575,7 @@ public class ProspectDao extends SocieteDao {
       LOGGER.log(Level.INFO,
           "Prospect supprimé avec succès : ID prospect={0}, ID société={1}, Adresse {2}",
           new Object[]{id, societeId, adresseEstReferenciee
-              ? "conservée (ID=" + adresseId + ")" : "supprimée (ID=" + adresseId + ")"});
+                ? "conservée (ID=" + adresseId + ")" : "supprimée (ID=" + adresseId + ")"});
 
       return true;
 
@@ -646,7 +650,8 @@ public class ProspectDao extends SocieteDao {
       );
     }
 
-    String sql = """
+    String sql =
+        """
         SELECT p.id_prospect, s.raison_sociale,
         a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville, 
         s.telephone, s.email, s.commentaires,

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
  * DAO pour les opérations sur la table {@code adresse}.
  *
@@ -179,7 +178,8 @@ public class AdresseDao {
       );
     }
 
-    String sql = """
+    String sql =
+            """
             INSERT INTO adresse (numero_rue, nom_rue, code_postal, ville)
             VALUES (?, ?, ?, ?)
             """;
@@ -228,7 +228,6 @@ public class AdresseDao {
     }
   }
 
-
   /**
    * Met à jour une adresse existante dans la base de données.
    *
@@ -271,7 +270,8 @@ public class AdresseDao {
       );
     }
 
-    String sql = """
+    String sql =
+            """
             UPDATE adresse 
             SET numero_rue = ?, nom_rue = ?, code_postal = ?, ville = ? WHERE id_adresse = ?
             """;
