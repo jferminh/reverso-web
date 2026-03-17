@@ -11,8 +11,7 @@ import java.io.PrintWriter;
  * Servlet.
  *
  */
-@WebServlet(name = "app", value = "/hello-servlet")
-public class HelloServlet extends HttpServlet {
+public class HelloServlet {
   private String message;
 
   /**

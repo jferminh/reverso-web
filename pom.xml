@@ -178,6 +178,16 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
                 <configuration>
+                    <webResources>
+                        <resource>
+                            <!-- node_modules servi depuis webapp/ directement par Tomcat exploded -->
+                            <directory>src/main/webapp</directory>
+                            <excludes>
+                                <!-- Exclut node_modules du WAR packagé -->
+                                <exclude>node_modules/**</exclude>
+                            </excludes>
+                        </resource>
+                    </webResources>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>

@@ -1,0 +1,41 @@
+// ==========================================
+// Point d'entrée SASS — Reverso CRM
+// Ordre OBLIGATOIRE : variables → Bootstrap → composants
+// ==========================================
+
+// 1. Nos variables en premier
+//    → elles ÉCRASENT les valeurs Bootstrap par défaut
+@use "variables" as *;
+
+// 2. Bootstrap complet depuis node_modules
+//    Le chemin "../../../node_modules/..." remonte de :
+//    static/scss/ → static/ → webapp/ → node_modules/
+//@import "../../../node_modules/bootstrap/scss/bootstrap";
+
+// 3. Nos composants personnalisés en dernier
+//    → ils ont accès aux variables Bootstrap ET aux nôtres
+@import "components";
+
+// 4. Styles globaux (scope global)
+body {
+  background-color: $background;
+  color: $text;
+}
+
+// Focus visible (accessibilité RGAA)
+:focus-visible {
+  outline: 3px solid $primary !important;
+  outline-offset: 2px;
+}
+
+// Surcharge bouton primaire avec notre couleur
+.btn-primary {
+  background-color: $primary;
+  border-color: $primary;
+
+  &:hover,
+  &:focus {
+    background-color: darken($primary, 5%);
+    border-color: darken($primary, 7%);
+  }
+}

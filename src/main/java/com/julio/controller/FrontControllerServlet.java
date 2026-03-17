@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * vers une ICommand via une HashMap cmd → ICommand.
  */
 @Slf4j
-@WebServlet(name = "FrontController", urlPatterns = {"/app"})
+@WebServlet(urlPatterns = {"/app"})
 public class FrontControllerServlet extends HttpServlet {
 
   private static final String VUE_ERREUR = "/WEB-INF/views/common/erreur.jsp";

@@ -7,6 +7,8 @@ target/
 .mvn/
 mvnw
 mvnw.cmd
+src/main/webapp/node_modules/
+src/main/webapp/static/css/main.css
 # Fichier de config sensible (mot de passe BDD)
 src/main/resources/database.properties
 
@@ -48,3 +50,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/node_modules/

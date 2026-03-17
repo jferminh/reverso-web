@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  *   <li>{@link #findById(Integer)} - Recherche par ID</li>
  *   <li>{@link #findAll()} - Liste tous les clients</li>
  *   <li>{@link #findByRaisonSociale(String)} - Recherche par raison sociale</li>
- *   <li>{@link #save(Client)} - Modifie un client</li>
+ *   <li>{@link #update(Client)} - Modifie un client</li>
  *   <li>{@link #delete(Integer)} - Supprime un client</li>
  * </ul>
  *
@@ -402,10 +402,9 @@ public class ClientDao extends SocieteDao {
    *   <li>Supprime l'adresse si elle n'est plus référencée</li>
    * </ol>
    *
-   * @return true si la suppression a réussi, false si le client n'existe pas
    * @throws DaoException si une erreur survient ou si le client a des contrats
    */
-  public boolean save(Client client) throws DaoException {
+  public void update(Client client) throws DaoException {
     if (client == null || client.getId() == null || client.getId() <= 0) {
       throw new DaoException(
           DaoException.ErrorCode.INVALID_PARAMETER,
@@ -436,7 +435,6 @@ public class ClientDao extends SocieteDao {
         societeId = rs.getInt("id_societe");
       } else {
         connection.rollback();
-        return false;
       }
 
       // On peut fermer ici ce couple rs / pstmtGetSociete
@@ -476,12 +474,10 @@ public class ClientDao extends SocieteDao {
             new Object[]{client.getId(), client.getRaisonSociale(),
                 client.getChiffreAffaires(), client.getNbEmployes()});
 
-        return true;
       } else {
         connection.rollback();
         LOGGER.log(
             Level.WARNING, "Aucune ligne mise à jour pour le client ID={0}", client.getId());
-        return false;
       }
 
     } catch (SQLException e) {
@@ -540,10 +536,9 @@ public class ClientDao extends SocieteDao {
    * </ol>
    *
    * @param id l'ID du client à supprimer
-   * @return true si la suppression a réussi, false si le client n'existe pas
    * @throws DaoException si une erreur survient ou si le client a des contrats
    */
-  public boolean delete(Integer id) throws DaoException {
+  public void delete(Integer id) throws DaoException {
     if (id == null || id <= 0) {
       throw new DaoException(
           DaoException.ErrorCode.INVALID_PARAMETER,
@@ -587,7 +582,6 @@ public class ClientDao extends SocieteDao {
       } else {
         connection.rollback();
         LOGGER.log(Level.WARNING, "Aucun client trouvé avec l'ID {0}", id);
-        return false;
       }
 
       // Fermer rs et pstmt
@@ -672,8 +666,6 @@ public class ClientDao extends SocieteDao {
               adresseEstReferenciee ? "conservée (ID=" + adresseId + ")"
                   : "supprimée (ID=" + adresseId + ")"
           });
-
-      return true;
 
     } catch (SQLException e) {
       // ✅ ROLLBACK en cas d'erreur SQL
