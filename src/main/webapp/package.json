@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Reverso CRM - Frontend Bootstrap + SASS",
   "scripts": {
-    "sass:watch": "sass static/scss/main.scss static/css/main.css --watch",
-    "sass:build": "sass static/scss/main.scss static/css/main.css --style=compressed",
+    "sass:watch": "sass static/css/main.scss static/css/main.css --watch --load-path=node_modules",
+    "sass:build": "sass static/css/main.scss static/css/main.css --style=compressed",
     "build": "npm run sass:build"
   },
   "main": "index.js",
