@@ -11,6 +11,10 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -39,19 +43,31 @@ public class FrontControllerServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
+
+    encoder(request, response);
+
     processRequest(request, response);
+  }
+
+  private static void encoder(HttpServletRequest request, HttpServletResponse response)
+      throws UnsupportedEncodingException {
+    request.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding("UTF-8");
   }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
+
+    encoder(request, response);
+
     processRequest(request, response);
   }
 
   private void processRequest(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    request.setCharacterEncoding("UTF-8");
-    response.setCharacterEncoding("UTF-8");
+
+    encoder(request, response);
 
     String cmd = request.getParameter("cmd");
     String vue = VUE_ERREUR;
@@ -93,6 +109,24 @@ public class FrontControllerServlet extends HttpServlet {
   public void destroy() {
     // ✅ INFO : événement de cycle de vie important
     log.info("FrontController détruit — libération des ressources");
+
+    try {
+      // 1. Étendre le fil de MySQL
+      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+      log.info("Fil de MySQL arrêté correctement");
+
+      // 2. Désenregistrer le driver pour éviter une fuite de mémoire
+      Enumeration<Driver> drivers = DriverManager.getDrivers();
+      while (drivers.hasMoreElements()) {
+        Driver driver = drivers.nextElement();
+        if (driver.getClass().getName().equals("com.mysql.cj.jdbc.Driver")) {
+          DriverManager.deregisterDriver(driver);
+          log.info("Driver JDBC deregistered : {}", driver);
+        }
+      }
+    } catch (Exception ex) {
+      log.error("Erreur lors de la libération de ressources", ex);
+    }
   }
 
   @Override

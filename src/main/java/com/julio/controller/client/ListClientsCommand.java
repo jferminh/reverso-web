@@ -5,36 +5,41 @@ import com.julio.dao.ClientDao;
 import com.julio.model.Client;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Commande listant tous les clients.
- * Récupère la liste via ClientDAO et l'envoie à la JSP.
+ * Charge et expose la liste de tous les clients.
+ * SOLID SRP : une seule responsabilité = récupérer la liste.
  */
 @Slf4j
 public class ListClientsCommand implements Icommand {
-  // private final ClientDao clientDao = new ClientDao();
 
   @Override
-  public String execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  public String execute(HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     // ✅ DEBUG : début de l'exécution, utile pour tracer les flux en dev
-    log.debug("Exécution de ListClientsCommand — récupération de la liste clients");
+    log.info("Chargement de la liste clients");
 
-    ClientDao clientDao = new ClientDao();
-    List<Client> clients = clientDao.findAll();
+    // Obtenir liste de clients
+    var clients = ClientDao.getInstance().findAll();
+    log.debug("{} client(s) chargé(s)", clients.size());
 
-    // ✅ Défense : findAll() ne doit jamais retourner null
-    if (clients == null) {
-      log.warn("ClientDao.findAll() a retourné null - liste vide utilisée par défault");
-      clients = new ArrayList<>();
-    }
+    // Passer à la vue
     request.setAttribute("clients", clients);
     request.setAttribute("bbClients", clients.size());
+    request.setAttribute("pageTitle", "Liste des clients");
 
-    // ✅ INFO : résultat métier significatif (paramétrisé, pas de concaténation)
-    log.info("ListClientsCommand — {} client(s) chargé(s) depuis la base", clients.size());
+    // Flash message
+    HttpSession session = request.getSession();
+    String flashMessage = (String) session.getAttribute("flashMessage");
+    if (flashMessage != null) {
+      request.setAttribute("flashMessage", flashMessage);
+      session.removeAttribute("flashMessage");
+      log.debug("Flash message affiché et supprimé de la session");
+    }
 
     return "/WEB-INF/views/client/list-clients.jsp";
   }

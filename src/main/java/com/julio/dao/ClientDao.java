@@ -62,6 +62,8 @@ public class ClientDao extends SocieteDao {
   private static final Logger LOGGER = LoggerService.getLogger(ClientDao.class);
   private final ContratDao contratDao;
 
+  private static ClientDao instance;
+
   /**
    * Constructeur qui récupère l'instance de DatabaseConnection.
    * Initialise également le ContratDao pour gérer les contrats associés.
@@ -72,6 +74,19 @@ public class ClientDao extends SocieteDao {
     super();
     this.contratDao = new ContratDao();
 
+  }
+
+  /**
+   * Méthode synchronisée de l'instance.
+   *
+   * @return intance
+   * @throws DaoException DAO exception
+   */
+  public static synchronized ClientDao getInstance() throws DaoException {
+    if (instance == null) {
+      instance = new ClientDao();
+    }
+    return instance;
   }
 
   /**
