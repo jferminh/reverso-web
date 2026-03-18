@@ -8,58 +8,48 @@
 <%--<%@ page contentType="text/html;charset=UTF-8" language="java" %>--%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
+<%-- header.jsp --%>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Reverso CRM — ${not empty pageTitle ? pageTitle : 'Accueil'}</title>
+    <title>${not empty pageTitle ? pageTitle : 'Reverso CRM'}</title>
 
-    <!--
-      CSS compilé depuis SASS via NPM.
-      Chemin : /reverso-web/static/css/main.css
-      contextPath = /reverso-web (le nom de ton WAR déployé dans Tomcat)
-    -->
-    <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/static/css/main.css"/>
+    <%-- Bootstrap via CDN (évite le problème node_modules/WAR) --%>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous"/>
 </head>
-<body>
+<body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-
-        <a class="navbar-brand"
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold"
            href="${pageContext.request.contextPath}/app">
-            🔄 Reverso CRM
+            🏢 Reverso CRM
         </a>
-
         <button class="navbar-toggler" type="button"
                 data-bs-toggle="collapse"
-                data-bs-target="#navbarMenu"
-                aria-controls="navbarMenu"
+                data-bs-target="#navMenu"
+                aria-controls="navMenu"
                 aria-expanded="false"
-                aria-label="Menu de navigation">
+                aria-label="Navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-
-        <div class="collapse navbar-collapse" id="navbarMenu">
+        <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link text-white"
-                       href="${pageContext.request.contextPath}/app?cmd=listClients">
-                        👥 Clients
+                    <a class="nav-link"
+                       href="${pageContext.request.contextPath}/app">
+                        🏠 Accueil
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white"
-                       href="${pageContext.request.contextPath}/app?cmd=listProspects">
-                        🎯 Prospects
-                    </a>
-                </li>
-                <li class="nav-item ms-2">
-                    <a class="nav-link text-white-50"
-                       href="${pageContext.request.contextPath}/app?cmd=logout">
-                        🚪 Déconnexion
+                    <a class="nav-link"
+                       href="${pageContext.request.contextPath}/app?cmd=listClients">
+                        👥 Clients
                     </a>
                 </li>
             </ul>
@@ -67,4 +57,4 @@
     </div>
 </nav>
 
-<main class="container mt-4">
+<main class="container mb-5">

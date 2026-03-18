@@ -1,23 +1,15 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: CDA-08
-  Date: 17/03/2026
-  Time: 15:05
-  To change this template use File | Settings | File Templates.
---%>
 </main>
 
-<footer class="bg-light text-center text-muted py-3 mt-5 border-top">
-    <small>Reverso CRM &copy; 2026 — Jakarta EE · Bootstrap 5 · SASS</small>
+<footer class="border-top py-3 mt-5 bg-white">
+    <div class="container text-center text-muted small">
+        © 2026 Reverso CRM — AFPA CDA
+    </div>
 </footer>
 
-<!--
-Bootstrap JS depuis node_modules.
-Chemin : /reverso-web/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js
-bootstrap.bundle.min.js = Bootstrap JS + Popper.js inclus (gère les menus déroulants)
--->
-<script src="${pageContext.request.contextPath}/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js">
-</script>
+<%-- Bootstrap JS via CDN --%>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmS8Qa0OgFXMVfqNXHMCkZvNHHwOH"
+        crossorigin="anonymous"></script>
 </body>
 </html>
 
