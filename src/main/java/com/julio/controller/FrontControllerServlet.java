@@ -1,5 +1,6 @@
 package com.julio.controller;
 
+import com.julio.controller.client.CreateClientCommand;
 import com.julio.controller.client.ListClientsCommand;
 import com.julio.controller.common.AccueilCommand;
 import jakarta.servlet.ServletException;
@@ -70,37 +71,36 @@ public class FrontControllerServlet extends HttpServlet {
     encoder(request, response);
 
     String cmd = request.getParameter("cmd");
+    Icommand command = commands.get(cmd);
     String vue = VUE_ERREUR;
 
+    if (command == null) {
+      // ✅ WARN : situation anormale, mais récupérable (fallback accueil)
+      log.warn("Commande inconnue reçue - cmd= '{}', fallback vers accueil", cmd);
+      command = commands.get("default");
+    } else {
+      // ✅ DEBUG : détail utile en développement, silencieux en production
+      log.debug("Dispatch - cmd='{}' vers {}", cmd, command.getClass().getSimpleName());
+    }
+
     try {
-      Icommand command = commands.get(cmd);
-      if (command == null) {
-        // ✅ WARN : situation anormale, mais récupérable (fallback accueil)
-        log.warn("Commande inconnue reçue - cmd= '{}', fallback vers accueil", cmd);
-        command = commands.get(null);
-
+      if (command != null) {
+        vue = command.execute(request, response);
       } else {
-        // ✅ DEBUG : détail utile en développement, silencieux en production
-        log.debug("Dispatch - cmd='{}' vers {}", cmd, command.getClass().getSimpleName());
+        log.error("Erreur critique : la commande de de fallback est introuvable");
+        request.setAttribute("erreurMessage", "Action introuvable");
       }
-
-      vue = command.execute(request, response);
-
     } catch (Exception ex) {
-      log.error("Erreur lors de la 'exécution de la commande cmd='{}' - {}",
-          cmd, ex.getMessage(), ex);
-      request.setAttribute("erreurMessage", ex.getMessage());
+      log.error("Erreur lors de la 'exécution de la commande cmd='{}'", cmd, ex);
+      request.setAttribute("erreurMessage", "Une erreur interne est survenue.");
       vue = VUE_ERREUR;
+    }
 
-    } finally {
-      // Si aucune redirection n'a été faite, on forward
-      if (!response.isCommitted()) {
-        try {
-          request.getRequestDispatcher(vue).forward(request, response);
-
-        } catch (Exception ex) {
-          log.error("Erreur lors du forward vers '{}' - {}", vue, ex.getMessage(), ex);
-        }
+    if (vue != null && !response.isCommitted()) {
+      try {
+        request.getRequestDispatcher(vue).forward(request, response);
+      } catch (ServletException | IOException ex) {
+        log.error("Erreur lors du forward vers '{}'", vue, ex);
       }
     }
   }
@@ -139,7 +139,7 @@ public class FrontControllerServlet extends HttpServlet {
 
     // 2) Commandes Clients (à implémenter ensuite)
     commands.put("listClients", new ListClientsCommand());
-    // commands.put("createClient", new CreateClientCommand());
+    commands.put("createClient", new CreateClientCommand());
     // commands.put("saveClient", new SaveClientCommand());
     // etc.
 
