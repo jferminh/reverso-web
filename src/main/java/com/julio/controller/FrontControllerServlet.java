@@ -3,6 +3,7 @@ package com.julio.controller;
 import com.julio.controller.client.CreateClientCommand;
 import com.julio.controller.client.ListClientsCommand;
 import com.julio.controller.common.AccueilCommand;
+import com.julio.controller.common.LoginCommand;
 import com.julio.dao.DatabaseConnexion;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -37,9 +38,10 @@ public class FrontControllerServlet extends HttpServlet {
   public void init() {
     commands = new HashMap<>();
 
-    // 1) Commandes par défaut (accueil)
+    // 1) Commandes par défaut (accueil et authentification)
     commands.put(null, new AccueilCommand());
     commands.put("accueil", new AccueilCommand());
+    commands.put("login", new LoginCommand());
 
     // 2) Commandes Clients
     commands.put("listClients", new ListClientsCommand());

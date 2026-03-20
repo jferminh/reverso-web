@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Sauvegarde de clients
+ * Sauvegarde de clients.
  */
 @Slf4j
 public class SaveClientCommand implements Icommand {

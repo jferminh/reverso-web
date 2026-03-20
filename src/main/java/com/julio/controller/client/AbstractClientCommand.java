@@ -16,6 +16,7 @@ public abstract class AbstractClientCommand implements Icommand {
 
   /**
    * Construit un Client depuis les paramètres POST.
+   *
    * @param request request
    * @return objet client
    */

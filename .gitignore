@@ -8,7 +8,7 @@ target/
 mvnw
 mvnw.cmd
 src/main/webapp/node_modules/
-src/main/webapp/static/css/main.css
+src/main/webapp/assets/css/main.css
 # Fichier de config sensible (mot de passe BDD)
 src/main/resources/database.properties
 
