@@ -1,189 +1,94 @@
 package com.julio.dao;
 
-import static com.julio.service.LoggingService.LOGGER;
-
-import java.io.IOException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.logging.Level;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Classe singleton pour gérer la connexion à la base de données MySQL.
+ * Classe singleton pour gérer le pool de connexions à la base de données MySQL.
  *
- * <p>Cette classe implémente le design pattern Singleton pour garantir qu'une seule
- * instance de connexion existe dans toute l'application. Elle charge la configuration
- * depuis le fichier database.properties et gère les erreurs de connexion avec des logs.
+ * <p>Utilise HikariCP pour fournir des connexions thread-safe, indispensable
+ * pour l'environnement Web Jakarta EE sur Tomcat 11.
  *
  * @author Julio FERMIN
- * @version 2.0
- * @since 13/01/2026
+ * @version 3.0
+ * @since 20/03/2026
  */
+@Slf4j
 public class DatabaseConnexion {
   // Instance unique (Singleton)
   private static DatabaseConnexion instance;
-
-  // Objet Connexion
-  private Connection connexion;
-
-  // Propriétés de configuration
-  private String url;
-  private String username;
-  private String password;
-  private String driver;
+  private HikariDataSource dataSource;
 
   /**
-   * Constructeur privé pour empêcher l'instanciation directe (pattern Singleton).
-   * Charge la configuration depuis database.properties et initialise la connexion.
+   * Constructeur privé. Charge la configuration et initialise le pool HikariCP.
    *
-   * @throws SQLException           si la connexion échoue
-   * @throws IOException            si le fichier de configuration est introuvable
-   * @throws ClassNotFoundException si le driver JDBC n'est pas trouvé
+   * @throws SQLException si la configuration échoue
    */
-  private DatabaseConnexion() throws SQLException, IOException, ClassNotFoundException {
-    loadProperties();
-    connect();
-  }
+  private DatabaseConnexion() throws SQLException {
+    try {
+      Properties properties = new Properties();
 
-  /**
-   * Charge les propriétés de configuration depuis le fichier database.properties.
-   *
-   * @throws IOException si le fichier est introuvable ou illisible
-   */
-  private void loadProperties() throws IOException {
-    Properties properties = new Properties();
-
-    try (InputStream input = this.getClass().getClassLoader()
-        .getResourceAsStream("database.properties")) {
-
-      if (input == null) {
-        String errorMsg = "Fichier database.properties introuvable";
-        LOGGER.log(Level.SEVERE, errorMsg);
-        throw new IOException(errorMsg);
+      try (InputStream input = getClass().getClassLoader()
+          .getResourceAsStream("database.properties")) {
+        if (input == null) {
+          throw new SQLException("Fichier database.properties introuvable");
+        }
+        properties.load(input);
       }
 
-      // Charger les propriétés
-      properties.load(input);
+      // Configuration de HikariCP
+      HikariConfig config = new HikariConfig();
+      config.setJdbcUrl(properties.getProperty("db.url"));
+      config.setUsername(properties.getProperty("db.username"));
+      config.setPassword(properties.getProperty("db.password"));
+      config.setDriverClassName(properties.getProperty("db.driver"));
 
-      // Récupérer les valeurs
-      this.url = properties.getProperty("db.url");
-      this.username = properties.getProperty("db.username");
-      this.password = properties.getProperty("db.password");
-      this.driver = properties.getProperty("db.driver");
+      config.setMaximumPoolSize(Integer.parseInt(properties.getProperty("db.maximumPoolSize")));
+      config.setMinimumIdle(Integer.parseInt(properties.getProperty("db.minimumIdle")));
+      config.setConnectionTimeout(Integer
+          .parseInt(properties.getProperty("db.connectionTimeout")));
 
-      LOGGER.log(Level.INFO, "Configuration de la base de données chargée avec succès");
+      this.dataSource = new HikariDataSource(config);
+      log.info("Pool de connexions (DataSource) initialisé avec succès");
 
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, "Erreur lors du chargement de database.properties", ex);
-      throw ex;
+    } catch (Exception e) {
+      log.error("Erreur lors de l'initialisation du DataSource", e);
+      throw new SQLException("Impossible de configurer la base de données", e);
     }
   }
 
   /**
-   * Établit la connexion à la base de données MySQL.
+   * Retourne l'instance unique de DatabaseConnexion.
    *
-   * @throws SQLException           si la connexion échoue
-   * @throws ClassNotFoundException si le driver JDBC n'est pas trouvé
+   * @return l'instance Singleton
+   * @throws SQLException en cas d'erreur d'initialisation
    */
-  private void connect() throws SQLException, ClassNotFoundException {
-    try {
-      // Charger le driver JDBC
-      Class.forName(driver);
-
-      // Établir la connexion
-      this.connexion = DriverManager.getConnection(url, username, password);
-
-      LOGGER.log(Level.INFO, "Connexion à la base de données établie avec succès");
-
-    } catch (ClassNotFoundException ex) {
-      LOGGER.log(Level.SEVERE, "Driver JDBC introuvable", ex);
-      throw ex;
-    } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE, "Erreur lors de la connexion à la base de données", e);
-      throw e;
-    }
-  }
-
-  /**
-   * Retourne l'instance unique de DatabaseConnection (pattern Singleton).
-   * Si l'instance n'existe pas, elle est créée. Si la connexion est fermée,
-   * elle est rouverte automatiquement.
-   *
-   * @return l'instance unique de DatabaseConnection
-   * @throws SQLException si la connexion échoue
-   */
-  public static DatabaseConnexion getInstance() throws SQLException {
-    try {
-      if (instance == null) {
-        synchronized (DatabaseConnexion.class) {
-          if (instance == null) {
-            instance = new DatabaseConnexion();
-          }
-        }
-      } else {
-        // Vérifier si la connexion est toujours active
-        if (instance.connexion.isClosed()) {
-          LOGGER.log(Level.WARNING, "Connexion fermée, reconnexion en cours...");
-          instance.connect();
-        }
-      }
-    } catch (SQLException | IOException | ClassNotFoundException e) {
-      LOGGER.log(Level.SEVERE, "Impossible de créer l'instance DatabaseConnexion", e);
-      throw new SQLException("Erreur initialization DatabaseConnexion", e);
+  public static synchronized DatabaseConnexion getInstance() throws SQLException {
+    if (instance == null) {
+      instance = new DatabaseConnexion();
     }
     return instance;
   }
 
   /**
-   * Retourne l'objet Connection pour exécuter des requêtes SQL.
+   * Fournit une connexion exclusive tirée du pool.
    *
-   * @return l'objet Connection JDBC
+   * @return un objet Connection prêt à l'emploi
+   * @throws SQLException si aucune connexion n'est disponible
    */
-  public Connection getConnection() {
-    return connexion;
+  public Connection getConnection() throws SQLException {
+    return dataSource.getConnection();
   }
 
-  /**
-   * Retourne l'objet Connection pour exécuter des requêtes SQL.
-   *
-   */
-  public void closeConnection() throws SQLException {
-    try {
-      if (connexion != null && !connexion.isClosed()) {
-        connexion.close();
-        LOGGER.log(Level.INFO, "Connexion à la base de données fermée");
-      }
-    } catch (SQLException ex) {
-      LOGGER.log(Level.SEVERE, "Erreur lors de la fermeture de la connexion", ex);
-      throw ex;
+  public void closePool() {
+    if (dataSource != null && !dataSource.isClosed()) {
+      dataSource.close();
+      log.info("Pool de connexions (DataSource) fermé");
     }
   }
-
-  /**
-   * Réinitialise l'instance (utile pour les tests unitaires).
-   * ⚠️ À utiliser uniquement dans les tests.
-   */
-  public static void resetInstance() throws SQLException {
-    if (instance != null) {
-      instance.closeConnection();
-      instance = null;
-    }
-  }
-
-  /**
-   * Teste la connexion à la base de données.
-   *
-   * @return true si la connexion est active, false sinon
-   */
-  public boolean testConnexion() {
-    try {
-      return connexion != null && !connexion.isClosed() && connexion.isValid(5);
-    } catch (SQLException ex) {
-      LOGGER.log(Level.WARNING, "Test de connexion échoué", ex);
-      return false;
-    }
-  }
-
 }
