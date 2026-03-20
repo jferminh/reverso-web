@@ -68,7 +68,7 @@ public abstract class SocieteDao {
     // il faudrait aussi lui passer en paramètre pour être 100% transactionnel.
     if (adresse.getId() == null) {
       try {
-        adresse = adresseDao.create(adresse);
+        adresse = adresseDao.save(adresse, connection);
       } catch (DaoException ex) {
         log.error("Erreur lors de la création de l'adresse", ex);
         throw new DaoException(DaoException.ErrorCode.CREATE_ERROR, "createSociete", null,

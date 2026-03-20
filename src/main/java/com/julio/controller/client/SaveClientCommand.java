@@ -18,13 +18,4 @@ public class SaveClientCommand implements Icommand {
     return "";
   }
 
-  static Client construireClient(HttpServletRequest request) {
-    String numeroRue = request.getParameter("numeroRue");
-    String nomRue = request.getParameter("nomRue");
-    String codePostal = request.getParameter("codePostal");
-    String ville = request.getParameter("ville");
-
-
-    Client client = new Client();
-  }
 }

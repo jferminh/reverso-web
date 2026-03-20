@@ -294,6 +294,74 @@ public class ClientDao extends SocieteDao {
     }
   }
 
+  /**
+   * Recherche un client par sa raison sociale (exact match, sensible à la casse).
+   *
+   * @param raisonSociale la raison sociale à rechercher
+   * @return le client trouvé ou null si non trouvé
+   * @throws DaoException si une erreur survient lors de la recherche
+   */
+  public Client findByRaisonSociale(String raisonSociale) throws DaoException {
+    if (raisonSociale == null || raisonSociale.trim().isEmpty()) {
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "findByRaisonSociale",
+          null,
+          "La raison sociale ne peut pas être null ou vide"
+      );
+    }
+
+    String sql =
+        """
+        SELECT c.id_client, s.raison_sociale,
+        a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville,
+        s.telephone, s.email, s.commentaires,
+        c.chiffre_affaires, c.nb_employes
+        FROM client c
+        INNER JOIN societe s ON c.id_societe = s.id_societe
+        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+        WHERE s.raison_sociale = ?
+        """;
+
+    // ✅ OPTIMISATION : try-with-resources pour Connection et PreparedStatement
+    try (Connection connection = dbConnexion.getConnection();
+         PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+      pstmt.setString(1, raisonSociale);
+
+      // ✅ OPTIMISATION : try-with-resources imbriqué pour le ResultSet
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          try {
+            return mapResultSetToClient(rs);
+
+          } catch (ValidationException e) {
+            log.error("Erreur validation données client avec raison sociale '{}'"
+                , raisonSociale, e);
+            throw new DaoException(
+                DaoException.ErrorCode.INVALID_PARAMETER,
+                "findByRaisonSociale",
+                null,
+                "Données invalides pour le client : " + e.getMessage(),
+                e
+            );
+          }
+        }
+        return null; // Aucun client trouvé
+      }
+
+    } catch (SQLException e) {
+      log.error("Erreur SQL lors de findByRaisonSociale avec '{}'", raisonSociale, e);
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "findByRaisonSociale",
+          null,
+          "Erreur lors de la recherche par raison sociale : " + SqlExceptionAnalyzer.analyze(e),
+          e
+      );
+    }
+  }
+
   // ========== MÉTHODES PRIVÉES UTILITAIRES ==========
 
   /**
