@@ -3,6 +3,7 @@ package com.julio.controller;
 import com.julio.controller.client.CreateClientCommand;
 import com.julio.controller.client.ListClientsCommand;
 import com.julio.controller.common.AccueilCommand;
+import com.julio.dao.DatabaseConnexion;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,7 +13,6 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Enumeration;
@@ -31,67 +31,63 @@ public class FrontControllerServlet extends HttpServlet {
 
   private static final String VUE_ERREUR = "/WEB-INF/views/common/erreur.jsp";
 
-  /**
-   * Routeur : nom de commande → implémentation ICommand.
-   */
   private Map<String, Icommand> commands;
 
-  /**
-   * Validator Bean Validation partagée (instancié une fois).
-   */
-  private Validator validator;
+  @Override
+  public void init() {
+    commands = new HashMap<>();
+
+    // 1) Commandes par défaut (accueil)
+    commands.put(null, new AccueilCommand());
+    commands.put("accueil", new AccueilCommand());
+
+    // 2) Commandes Clients
+    commands.put("listClients", new ListClientsCommand());
+    commands.put("createClient", new CreateClientCommand());
+
+    // Bean Validation : Validator global
+    try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+      Validator validator = factory.getValidator();
+      getServletContext().setAttribute("validator", validator);
+    }
+
+    log.info("Front Controller initialisé avec succès");
+  }
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
-
-    encoder(request, response);
-
+      throws IOException {
     processRequest(request, response);
-  }
-
-  private static void encoder(HttpServletRequest request, HttpServletResponse response)
-      throws UnsupportedEncodingException {
-    request.setCharacterEncoding("UTF-8");
-    response.setCharacterEncoding("UTF-8");
   }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
-
-    encoder(request, response);
-
+      throws IOException {
     processRequest(request, response);
   }
 
   private void processRequest(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
+      throws IOException {
 
-    encoder(request, response);
+    // ✅ OPTIMISATION : Encodage défini une seule fois ici
+    request.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding("UTF-8");
 
     String cmd = request.getParameter("cmd");
     Icommand command = commands.get(cmd);
-    String vue = VUE_ERREUR;
+    String vue;
 
     if (command == null) {
-      // ✅ WARN : situation anormale, mais récupérable (fallback accueil)
-      log.warn("Commande inconnue reçue - cmd= '{}', fallback vers accueil", cmd);
-      command = commands.get("default");
+      log.warn("Commande inconnue reçue - cmd='{}', fallback vers accueil", cmd);
+      command = commands.get("accueil");
     } else {
-      // ✅ DEBUG : détail utile en développement, silencieux en production
       log.debug("Dispatch - cmd='{}' vers {}", cmd, command.getClass().getSimpleName());
     }
 
     try {
-      if (command != null) {
-        vue = command.execute(request, response);
-      } else {
-        log.error("Erreur critique : la commande de de fallback est introuvable");
-        request.setAttribute("erreurMessage", "Action introuvable");
-      }
+      vue = command.execute(request, response);
     } catch (Exception ex) {
-      log.error("Erreur lors de la 'exécution de la commande cmd='{}'", cmd, ex);
+      log.error("Erreur lors de l'exécution de la commande cmd='{}'", cmd, ex);
       request.setAttribute("erreurMessage", "Une erreur interne est survenue.");
       vue = VUE_ERREUR;
     }
@@ -107,15 +103,18 @@ public class FrontControllerServlet extends HttpServlet {
 
   @Override
   public void destroy() {
-    // ✅ INFO : événement de cycle de vie important
     log.info("FrontController détruit — libération des ressources");
 
+    // ✅ CORRECTION CRITIQUE : Fermer le pool HikariCP d'abord !
     try {
-      // 1. Étendre le fil de MySQL
-      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
-      log.info("Fil de MySQL arrêté correctement");
+      DatabaseConnexion.getInstance().closePool();
+    } catch (Exception e) {
+      log.error("Erreur lors de la fermeture du pool de connexions", e);
+    }
 
-      // 2. Désenregistrer le driver pour éviter une fuite de mémoire
+    // Libération du driver MySQL (bonne pratique pour Tomcat)
+    try {
+      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
       Enumeration<Driver> drivers = DriverManager.getDrivers();
       while (drivers.hasMoreElements()) {
         Driver driver = drivers.nextElement();
@@ -125,34 +124,7 @@ public class FrontControllerServlet extends HttpServlet {
         }
       }
     } catch (Exception ex) {
-      log.error("Erreur lors de la libération de ressources", ex);
+      log.error("Erreur lors de la libération du driver MySQL", ex);
     }
-  }
-
-  @Override
-  public void init() {
-    commands = new HashMap<>();
-
-    // 1) Commande par défaut (accueil)
-    commands.put(null, new AccueilCommand());
-    commands.put("accueil", new AccueilCommand());
-
-    // 2) Commandes Clients (à implémenter ensuite)
-    commands.put("listClients", new ListClientsCommand());
-    commands.put("createClient", new CreateClientCommand());
-    // commands.put("saveClient", new SaveClientCommand());
-    // etc.
-
-    // 3) Commandes Prospects (à implémenter ensuite)
-    // ...
-
-    // Bean Validation : Validator global
-    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-    validator = factory.getValidator();
-    // On le met à disposition des Commands via le ServletContext
-    getServletContext().setAttribute("validator", validator);
-
-    log.info("Front Controller initialisé");
-
   }
 }
