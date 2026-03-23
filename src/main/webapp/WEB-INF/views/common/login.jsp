@@ -6,10 +6,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description"
-          content="SwingApp CRM — Gestion clients et prospects. Connectez-vous pour accéder à votre tableau de bord." />
-    <title>SwingApp CRM — Connexion</title>
+          content="Reverso CRM — Gestion clients et prospects. Connectez-vous pour accéder à votre tableau de bord." />
+    <title>Reverso CRM — Connexion</title>
 
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/bootstrap.min.css" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css" />
 </head>
 <body class="bg-light">
@@ -20,7 +20,7 @@
      hidden>
     <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3">
         <p class="mb-0 small">
-            <strong>SwingApp CRM</strong> utilise le <strong>LocalStorage</strong>
+            <strong>Reverso CRM</strong> utilise le <strong>LocalStorage</strong>
             pour mémoriser vos saisies. Données supprimées après
             <strong>30 jours sans activité</strong>.
             <a href="${pageContext.request.contextPath}/mentions-legales"
@@ -50,7 +50,7 @@
                             </svg>
                         </div>
                         <div>
-                            <h1 class="h4 fw-bold mb-0" id="titre-hero">SwingApp CRM</h1>
+                            <h1 class="h4 fw-bold mb-0" id="titre-hero">Reverso CRM</h1>
                             <p class="mb-0 opacity-75 small">Gestion clients &amp; prospects</p>
                         </div>
                     </div>
@@ -159,7 +159,7 @@
     </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/assets/bootstrap.bundle.min.js"></script>
+<script src="${pageContext.request.contextPath}/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/rgpd-consent.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/login.js"></script>
 </body>

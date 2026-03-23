@@ -9,20 +9,26 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Contrôleur de la page d'accueil (tableau de bord).
  * Charge les statistiques de base et redirige vers accueil.jsp.
- * SOLID SRP : une seule responsabilité = préparer le dashboard.
  */
 @Slf4j
 public class AccueilCommand implements Icommand {
+
   @Override
   public String execute(HttpServletRequest request, HttpServletResponse response)
       throws Exception {
     log.info("Chargement du tableau de bord");
+    request.setAttribute("pageTitle", "Tableau de bord - Reverso CRM");
 
-    // Stats pour les cartes du dashboard
-    ClientDao clientDao = new ClientDao();
-    int nbClients = clientDao.findAll().size();
-    request.setAttribute("nbClients", nbClients);
-    request.setAttribute("pageTitle", "Tableau de bord");
+    try {
+      ClientDao clientDao = new ClientDao();
+      int nbClients = clientDao.findAll().size();
+      request.setAttribute("nbClients", nbClients);
+
+    } catch (Exception e) {
+      log.error("Erreur lors du comptage des client pour le tableau de bord", e);
+      request.setAttribute("nbClients", 0); // Valeur par défault de sécurité
+      request.setAttribute("erreurMessage", "Impossible de charger certaines statistiques.");
+    }
 
     return "/WEB-INF/views/common/accueil.jsp";
   }

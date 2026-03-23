@@ -1,206 +1,149 @@
-<%@ include file="../common/taglibs.jsp" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="../common/header.jsp" %>
 
-<%-- ===== EN-TÊTE ===== --%>
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h2 class="fw-bold mb-1">
-            <c:choose>
-                <c:when test="${modeEdit}">✏️ Modifier le client</c:when>
-                <c:otherwise>➕ Nouveau client</c:otherwise>
-            </c:choose>
-        </h2>
-        <p class="text-muted mb-0">
-            Les champs marqués d'un
-            <span class="text-danger fw-bold">*</span> sont obligatoires.
-        </p>
-    </div>
-    <a href="${pageContext.request.contextPath}/app?cmd=listClients"
-       class="btn btn-outline-secondary btn-sm">
+<div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+    <a href="${pageContext.request.contextPath}/app?cmd=listClients" class="btn btn-outline-secondary btn-sm">
         ← Retour à la liste
     </a>
+    <div class="text-center">
+        <p class="m-0 fw-bold fs-5">${modeEdit ? 'Modifier le Client' : 'Nouveau Client'}</p>
+        <p class="m-0 small text-muted">Fiche d'information</p>
+    </div>
+    <span class="badge bg-light text-secondary border" data-badge-brouillon>
+        📄 Brouillon auto
+    </span>
 </div>
 
-<%-- ===== MESSAGE D'ERREUR ===== --%>
-<c:if test="${not empty erreur}">
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        ⚠️ ${erreur}
-        <button type="button" class="btn-close"
-                data-bs-dismiss="alert" aria-label="Fermer"></button>
+<%-- Affichage des erreurs de validation Serveur (Bean Validation) --%>
+<c:if test="${not empty erreurMessage}">
+    <div class="alert alert-danger" role="alert">
+        ❌ ${erreurMessage}
     </div>
 </c:if>
 
-<%-- ===== FORMULAIRE ===== --%>
-<form method="post"
-      action="${pageContext.request.contextPath}/app?cmd=${modeEdit ? 'updateClient' : 'saveClient'}${modeEdit ? '&id='.concat(client.id) : ''}"
-      novalidate
-      aria-label="Formulaire ${modeEdit ? 'modification' : 'création'} client">
+<form id="form-client" action="${pageContext.request.contextPath}/app" method="POST" aria-label="Formulaire client">
 
-    <%-- ===== SECTION 1 : SOCIÉTÉ ===== --%>
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-light fw-bold">
-            🏢 Informations société
-        </div>
+    <input type="hidden" name="cmd" value="saveClient">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+    <input type="hidden" name="id" value="${client.id}">
+    <input type="hidden" name="idAdresse" value="${client.adresse.id}">
+
+    <p class="text-muted mb-4">
+        Les champs marqués d'un <span class="text-danger fw-bold">*</span> sont obligatoires.
+    </p>
+
+    <section aria-labelledby="titre-societe" class="card mb-4 shadow-sm border-0">
         <div class="card-body">
+            <h2 class="card-title h5 mb-3" id="titre-societe">Information Société</h2>
 
-            <div class="row g-3">
+            <div class="mb-3">
+                <label for="raison-sociale" class="form-label">Raison sociale <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="raison-sociale" name="raisonSociale"
+                       value="${client.raisonSociale}" placeholder="Ex : ACME Corporation" required>
+                <div id="raison-sociale-erreur" class="invalid-feedback" hidden>La raison sociale est obligatoire.</div>
+            </div>
 
-                <%-- Raison sociale --%>
-                <div class="col-12">
-                    <label for="raisonSociale" class="form-label">
-                        Raison sociale <span class="text-danger" aria-hidden="true">*</span>
-                    </label>
-                    <input type="text"
-                           id="raisonSociale"
-                           name="raisonSociale"
-                           class="form-control"
-                           value="${not empty client.raisonSociale ? client.raisonSociale : ''}"
-                           placeholder="Ex : ACME Corporation"
-                           required
-                           autocomplete="organization"
-                           aria-required="true"/>
-                </div>
-
-                <%-- Email --%>
-                <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email"
-                           id="email"
-                           name="email"
-                           class="form-control"
-                           value="${not empty client.email ? client.email : ''}"
-                           placeholder="contact@societe.fr"
-                           autocomplete="email"/>
-                </div>
-
-                <%-- Téléphone --%>
-                <div class="col-md-6">
-                    <label for="telephone" class="form-label">Téléphone</label>
-                    <input type="tel"
-                           id="telephone"
-                           name="telephone"
-                           class="form-control"
-                           value="${not empty client.telephone ? client.telephone : ''}"
-                           placeholder="01 23 45 67 89"
-                           autocomplete="tel"/>
-                </div>
-
-                <%-- CA annuel --%>
-                <div class="col-md-6">
-                    <label for="chiffreAffaires" class="form-label">
-                        Chiffre d'affaires (€)
-                    </label>
-                    <input type="number"
-                           id="chiffreAffaires"
-                           name="chiffreAffaires"
-                           class="form-control"
-                           value="${not empty client.chiffreAffaires ? client.chiffreAffaires : ''}"
-                           placeholder="150000"
-                           min="0"/>
-                </div>
-
-                <%-- Nb employés --%>
-                <div class="col-md-6">
-                    <label for="nbEmployes" class="form-label">Nombre d'employés</label>
-                    <input type="number"
-                           id="nbEmployes"
-                           name="nbEmployes"
-                           class="form-control"
-                           value="${not empty client.nbEmployes ? client.nbEmployes : ''}"
-                           placeholder="45"
-                           min="0"/>
-                </div>
-
-                <%-- Commentaires --%>
-                <div class="col-12">
-                    <label for="commentaires" class="form-label">Commentaires</label>
-                    <textarea id="commentaires"
-                              name="commentaires"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Notes internes...">${not empty client.commentaires ? client.commentaires : ''}</textarea>
-                </div>
-
+            <div class="mb-3">
+                <label for="email-client" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email-client" name="email"
+                       value="${client.email}" placeholder="Ex : contact@societe.fr" required>
+                <div id="email-client-erreur" class="invalid-feedback" hidden>Veuillez saisir un email valide.</div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <%-- ===== SECTION 2 : ADRESSE ===== --%>
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-light fw-bold">
-            📍 Adresse postale
-        </div>
+    <section aria-labelledby="titre-coordonnees" class="card mb-4 shadow-sm border-0">
         <div class="card-body">
-
+            <h2 class="card-title h5 mb-3" id="titre-coordonnees">Coordonnées &amp; Chiffres clés</h2>
             <div class="row g-3">
-
-                <%-- Numéro de rue --%>
-                <div class="col-md-3">
-                    <label for="numeroRue" class="form-label">N°</label>
-                    <input type="text"
-                           id="numeroRue"
-                           name="numeroRue"
-                           class="form-control"
-                           value="${not empty client.adresse.numeroRue ? client.adresse.numeroRue : ''}"
-                           placeholder="15"/>
+                <div class="col-12 col-md-6">
+                    <label for="telephone" class="form-label">Téléphone <span class="text-danger">*</span></label>
+                    <input type="tel" id="telephone" name="telephone" class="form-control"
+                           value="${client.telephone}" placeholder="Ex : 0123456789" required pattern="[0-9]{10}">
+                    <div id="telephone-erreur" class="invalid-feedback" hidden>Doit contenir exactement 10 chiffres.</div>
                 </div>
 
-                <%-- Nom de rue --%>
-                <div class="col-md-9">
-                    <label for="nomRue" class="form-label">Rue</label>
-                    <input type="text"
-                           id="nomRue"
-                           name="nomRue"
-                           class="form-control"
-                           value="${not empty client.adresse.nomRue ? client.adresse.nomRue : ''}"
-                           placeholder="Avenue des Champs-Élysées"
-                           autocomplete="street-address"/>
+                <div class="col-12 col-md-6">
+                    <label for="ca-annuel" class="form-label">CA annuel (€) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" id="ca-annuel" name="chiffreAffaires" class="form-control"
+                               value="${client.chiffreAffaires}" required min="200">
+                        <span class="input-group-text">€</span>
+                    </div>
+                    <div id="ca-annuel-erreur" class="invalid-feedback" hidden>Minimum 200€.</div>
                 </div>
 
-                <%-- Code postal --%>
-                <div class="col-md-4">
-                    <label for="codePostal" class="form-label">Code postal</label>
-                    <input type="text"
-                           id="codePostal"
-                           name="codePostal"
-                           class="form-control"
-                           value="${not empty client.adresse.codePostal ? client.adresse.codePostal : ''}"
-                           placeholder="75008"
-                           pattern="[0-9]{5}"
-                           maxlength="5"
-                           autocomplete="postal-code"/>
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="nb-employes" class="form-label">Nombre d'employés <span class="text-danger">*</span></label>
+                    <input type="number" id="nb-employes" name="nbEmployes" class="form-control"
+                           value="${client.nbEmployes}" required min="1">
+                    <div id="nb-employes-erreur" class="invalid-feedback" hidden>Minimum 1 employé.</div>
                 </div>
-
-                <%-- Ville --%>
-                <div class="col-md-8">
-                    <label for="ville" class="form-label">Ville</label>
-                    <input type="text"
-                           id="ville"
-                           name="ville"
-                           class="form-control"
-                           value="${not empty client.adresse.ville ? client.adresse.ville : ''}"
-                           placeholder="Paris"
-                           autocomplete="address-level2"/>
-                </div>
-
             </div>
         </div>
+    </section>
+
+    <section aria-labelledby="titre-adresse" class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <h2 class="card-title h5 mb-3" id="titre-adresse">Adresse Postale</h2>
+
+            <div class="row g-3">
+                <div class="col-12 col-sm-3 mb-3">
+                    <label for="numero-rue" class="form-label">Numéro <span class="text-danger">*</span></label>
+                    <input type="text" id="numero-rue" name="numeroRue" class="form-control"
+                           value="${client.adresse.numeroRue}" required>
+                </div>
+
+                <div class="col-12 col-sm-9 mb-3">
+                    <label for="rue" class="form-label">Rue <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="text" id="rue" name="nomRue" class="form-control"
+                               value="${client.adresse.nomRue}" required>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-geo" title="Rechercher">📍</button>
+                    </div>
+                    <ul id="suggestion-adresse" class="list-group position-absolute z-3 w-100 d-none"></ul>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-4">
+                    <label for="code-postal" class="form-label">Code postal <span class="text-danger">*</span></label>
+                    <input type="text" id="code-postal" name="codePostal" class="form-control"
+                           value="${client.adresse.codePostal}" required pattern="[0-9]{5}">
+                </div>
+                <div class="col-12 col-sm-8">
+                    <label for="ville" class="form-label">Ville <span class="text-danger">*</span></label>
+                    <input type="text" id="ville" name="ville" class="form-control"
+                           value="${client.adresse.ville}" required>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="alert alert-light border mt-4 small">
+        <h2 class="h6 fw-bold mb-2">🔒 Protection des données (RGPD)</h2>
+        <p class="mb-0">Traitement par AFPA. Base légale : intérêt légitime (Art. 6.1.f RGPD). Conservation : 30 jours.</p>
     </div>
 
-    <%-- ===== BOUTONS ===== --%>
-    <div class="d-flex justify-content-between gap-2">
-        <a href="${pageContext.request.contextPath}/app?cmd=listClients"
-           class="btn btn-outline-secondary">
-            Annuler
-        </a>
-        <button type="submit" class="btn btn-primary px-4">
-            <c:choose>
-                <c:when test="${modeEdit}">💾 Enregistrer les modifications</c:when>
-                <c:otherwise>✅ Créer le client</c:otherwise>
-            </c:choose>
-        </button>
+    <div class="form-check mt-2 mb-4">
+        <input class="form-check-input" type="checkbox" id="consentement-client" name="consentement" required>
+        <label class="form-check-label" for="consentement-client">
+            J'accepte le traitement de mes données. <span class="text-danger">*</span>
+        </label>
     </div>
 
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 pt-3 border-top">
+        <a href="${pageContext.request.contextPath}/app?cmd=listClients" class="btn btn-outline-secondary">❌ Annuler</a>
+        <div class="d-flex gap-2">
+            <button type="button" id="btn-brouillon" class="btn btn-outline-primary">💾 Brouillon</button>
+            <button type="submit" id="btn-soumettre" class="btn btn-primary">✅ Enregistrer</button>
+        </div>
+    </div>
 </form>
+
+<script src="${pageContext.request.contextPath}/assets/js/brouillon.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/utils-form.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/geo-adresse.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-client.js"></script>
 
 <%@ include file="../common/footer.jsp" %>

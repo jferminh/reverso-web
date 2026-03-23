@@ -1,8 +1,17 @@
-db.url=jdbc:mysql://localhost:3306/ecf_dao?useSSL=false&serverTimezone=UTC
+# Configuration de la base de données MySQL
+# ECF DAO - Gestion Clients/Prospects
+
+# URL de connexion JDBC
+db.url=jdbc:mysql://localhost:3306/ecf_dao?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+
+# Identifiants de connexion
 db.username=root
 db.password=VOTRE_MOT_DE_PASSE_ICI
+
+# Configuration du pool de connexions (optionnel)
 db.driver=com.mysql.cj.jdbc.Driver
-db.autoReconnect=true
+
+# Options de connexion
 db.maximumPoolSize=10
 db.minimumIdle=2
 db.connectionTimeout=30000
