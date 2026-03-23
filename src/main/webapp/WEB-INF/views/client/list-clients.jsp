@@ -1,213 +1,113 @@
-<%@ include file="../common/taglibs.jsp" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="../common/header.jsp" %>
 
-<%-- ===== BARRE D'ACTIONS ===== --%>
-<div class="d-flex flex-column flex-md-row justify-content-between
-            align-items-md-center gap-2 mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <h2 class="h4 mb-0">👥 Liste des Clients</h2>
 
-    <%-- Champ recherche (côté client, JS optionnel) --%>
-    <div class="flex-grow-1">
-        <label for="search-clients" class="form-label visually-hidden">
-            Rechercher un client
-        </label>
-        <div class="input-group">
-            <span class="input-group-text bg-white" id="search-addon">🔍</span>
-            <input type="search"
-                   id="search-clients"
-                   class="form-control border-end-0"
-                   placeholder="Rechercher par raison sociale, email ou ville..."
-                   aria-describedby="search-addon">
-            <span class="input-group-text bg-white border-start-0">
-        <button class="btn btn-link p-0 text-decoration-none"
-                type="button"
-                onclick="document.getElementById('search-clients').value=''">
-          ✕
-        </button>
-      </span>
-        </div>
-    </div>
-
-    <%-- Bouton créer --%>
-    <div class="text-md-end mt-2 mt-md-0">
-        <a href="${pageContext.request.contextPath}/app?cmd=createClient"
-           class="btn btn-primary">
-            <span class="d-none d-sm-inline">➕ Créer un client</span>
-            <span class="d-inline d-sm-none">➕ Créer</span>
-        </a>
-    </div>
+    <a href="${pageContext.request.contextPath}/app?cmd=createClient" class="btn btn-primary shadow-sm">
+        <span class="d-none d-sm-inline">+ Créer un client</span>
+        <span class="d-inline d-sm-none">+ Créer</span>
+    </a>
 </div>
 
-<%-- ===== MESSAGE FLASH ===== --%>
-<c:if test="${not empty flashMessage}">
+<%-- Messages de retour (Succès ou Erreur après création/suppression) --%>
+<c:if test="${not empty sessionScope.successMessage}">
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ${flashMessage}
-        <button type="button" class="btn-close"
-                data-bs-dismiss="alert" aria-label="Fermer"></button>
+        ✅ ${sessionScope.successMessage}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
     </div>
+    <c:remove var="successMessage" scope="session"/>
 </c:if>
 
-<%-- ===== TABLEAU OU ÉTAT VIDE ===== --%>
-<c:choose>
+<c:if test="${not empty erreurMessage}">
+    <div class="alert alert-danger" role="alert">❌ ${erreurMessage}</div>
+</c:if>
 
-    <c:when test="${empty clients}">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-5 text-muted">
-                <span style="font-size:3rem">📭</span>
-                <p class="mt-3 mb-3">Aucun client enregistré pour le moment.</p>
-                <a href="${pageContext.request.contextPath}/app?cmd=createClient"
-                   class="btn btn-primary">➕ Créer le premier client</a>
-            </div>
-        </div>
-    </c:when>
-
-    <c:otherwise>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-
-                    <%-- Caption sémantique (RGAA / accessibilité) --%>
-                <caption class="text-muted">
-                    Liste des clients — ${clients.size()} enregistré(s)
-                </caption>
-
-                <thead class="table-light">
-                <tr>
-                    <th scope="col">Raison sociale</th>
-                    <th scope="col" class="d-none d-md-table-cell">Email</th>
-                    <th scope="col" class="d-none d-md-table-cell">Téléphone</th>
-                    <th scope="col" class="d-none d-lg-table-cell">Ville</th>
-                    <th scope="col" class="d-none d-lg-table-cell text-end">CA (€)</th>
-                    <th scope="col" class="text-end">Actions</th>
-                </tr>
-                </thead>
-
-                <tbody id="table-clients">
-                <c:forEach var="client" items="${clients}">
+<div class="card shadow-sm border-0 mb-5">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th scope="col">Raison sociale</th>
+                <th scope="col">Email</th>
+                <th scope="col" class="d-none d-md-table-cell">Téléphone</th>
+                <th scope="col">Ville</th>
+                <th scope="col" class="d-none d-lg-table-cell">CA (€)</th>
+                <th scope="col" class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:choose>
+                <c:when test="${empty clients}">
                     <tr>
-                        <th scope="row">${client.raisonSociale}</th>
-
-                        <td class="d-none d-md-table-cell">
-                            <a href="mailto:${client.email}">${client.email}</a>
-                        </td>
-
-                        <td class="d-none d-md-table-cell">
-                            <a href="tel:${client.telephone}">${client.telephone}</a>
-                        </td>
-
-                        <td class="d-none d-lg-table-cell">
-                                ${client.adresse.ville}
-                        </td>
-
-                        <td class="d-none d-lg-table-cell text-end">
-                            <c:if test="${not empty client.chiffreAffaires}">
-                                <fmt:formatNumber value="${client.chiffreAffaires}"
-                                                  type="currency"
-                                                  currencySymbol="€"
-                                                  maxFractionDigits="0"/>
-                            </c:if>
-                        </td>
-
-                        <td class="text-end">
-                                <%-- Modifier --%>
-                            <a href="${pageContext.request.contextPath}/app?cmd=editClient&id=${client.id}"
-                               class="btn btn-sm btn-outline-secondary me-1"
-                               title="Modifier ${client.raisonSociale}">
-                                ⚙️
-                            </a>
-                                <%-- Voir détail --%>
-                            <a href="${pageContext.request.contextPath}/app?cmd=detailClient&id=${client.id}"
-                               class="btn btn-sm btn-outline-primary me-1"
-                               title="Voir ${client.raisonSociale}">
-                                📍
-                            </a>
-                                <%-- Supprimer (modale de confirmation) --%>
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-danger"
-                                    title="Supprimer ${client.raisonSociale}"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#modal-suppression"
-                                    data-id="${client.id}"
-                                    data-nom="${client.raisonSociale}">
-                                🗑️
-                            </button>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            Aucun client trouvé. Commencez par en créer un !
                         </td>
                     </tr>
-                </c:forEach>
-                </tbody>
+                </c:when>
+                <c:otherwise>
+                    <c:forEach var="client" items="${clients}">
+                        <tr>
+                            <th scope="row">${client.raisonSociale}</th>
+                            <td><a href="mailto:${client.email}">${client.email}</a></td>
+                            <td class="d-none d-md-table-cell">${client.telephone}</td>
+                            <td>${client.adresse.ville}</td>
+                            <td class="d-none d-lg-table-cell">
+                                <fmt:formatNumber value="${client.chiffreAffaires}" type="currency" currencySymbol="€" maxFractionDigits="0"/>
+                            </td>
+                            <td class="text-end">
+                                <a href="${pageContext.request.contextPath}/app?cmd=editClient&id=${client.id}"
+                                   class="btn btn-sm btn-outline-secondary me-1" title="Modifier">
+                                    ⚙️
+                                </a>
+                                <a href="${pageContext.request.contextPath}/app?cmd=viewClient&id=${client.id}"
+                                   class="btn btn-sm btn-outline-primary me-1" title="Voir détails">
+                                    📍
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                        data-bs-toggle="modal" data-bs-target="#modal-suppression"
+                                        data-nom="${client.raisonSociale}" data-id="${client.id}">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                </c:otherwise>
+            </c:choose>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-            </table>
-        </div>
-
-        <%-- ===== PAGINATION ===== --%>
-        <nav aria-label="Pagination des clients" class="mt-3">
-            <ul class="pagination pagination-sm justify-content-center mb-0">
-                <li class="page-item disabled" aria-disabled="true">
-                    <span class="page-link">Précédent</span>
-                </li>
-                <li class="page-item active" aria-current="page">
-                    <span class="page-link">1</span>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="#" aria-label="Aller à la page 2">2</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="#" aria-label="Aller à la page suivante">Suivant</a>
-                </li>
-            </ul>
-        </nav>
-    </c:otherwise>
-
-</c:choose>
-
-<%-- ===== MODALE SUPPRESSION ===== --%>
-<div class="modal fade" id="modal-suppression" tabindex="-1"
-     aria-labelledby="titre-suppression" aria-hidden="true">
+<div class="modal fade" id="modal-suppression" tabindex="-1" aria-labelledby="modal-suppression-titre" aria-modal="true" role="dialog">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="titre-suppression">
-                    Confirmer la suppression
-                </h5>
-                <button type="button" class="btn-close"
-                        data-bs-dismiss="modal" aria-label="Fermer"></button>
-            </div>
-            <div class="modal-body">
-                Êtes-vous sûr de vouloir supprimer
-                <strong id="modal-nom-client"></strong> ?
-                <br><small class="text-muted">Cette action est irréversible.</small>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary"
-                        data-bs-dismiss="modal">Annuler</button>
-                <a id="btn-confirm-suppr"
-                   href="#"
-                   class="btn btn-danger">
-                    🗑️ Supprimer
-                </a>
-            </div>
+
+            <form action="${pageContext.request.contextPath}/app" method="POST">
+                <input type="hidden" name="cmd" value="deleteClient">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                <input type="hidden" name="id" id="input-id-suppression">
+
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="modal-suppression-titre">⚠️ Confirmation de suppression</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer <strong id="nom-entite-suppression">"…"</strong> ?</p>
+                    <p class="text-danger mb-0"><strong>⚠️ Cette action est irréversible.</strong></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+                </div>
+            </form>
+
         </div>
     </div>
 </div>
 
-<%-- ===== JS : recherche live + modale suppression ===== --%>
-<script>
-    // Recherche live côté client
-    document.getElementById('search-clients').addEventListener('input', function () {
-        const val = this.value.toLowerCase();
-        document.querySelectorAll('#table-clients tr').forEach(function (row) {
-            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
-        });
-    });
-
-    // Modale suppression : injecter id + nom du client
-    document.getElementById('modal-suppression')
-        .addEventListener('show.bs.modal', function (e) {
-            const btn = e.relatedTarget;
-            const id  = btn.getAttribute('data-id');
-            const nom = btn.getAttribute('data-nom');
-            document.getElementById('modal-nom-client').textContent = nom;
-            document.getElementById('btn-confirm-suppr').href =
-                '${pageContext.request.contextPath}/app?cmd=deleteClient&id=' + id;
-        });
-</script>
+<script src="${pageContext.request.contextPath}/assets/js/modal.js"></script>
 
 <%@ include file="../common/footer.jsp" %>

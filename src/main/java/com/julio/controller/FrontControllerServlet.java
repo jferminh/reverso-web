@@ -1,8 +1,11 @@
 package com.julio.controller;
 
 import com.julio.controller.client.CreateClientCommand;
+import com.julio.controller.client.DeleteClientCommand;
+import com.julio.controller.client.EditClientCommand;
 import com.julio.controller.client.ListClientsCommand;
 import com.julio.controller.client.SaveClientCommand;
+import com.julio.controller.client.ViewClientCommand;
 import com.julio.controller.common.AccueilCommand;
 import com.julio.controller.common.LoginCommand;
 import com.julio.controller.common.LogoutCommand;
@@ -50,6 +53,9 @@ public class FrontControllerServlet extends HttpServlet {
     commands.put("listClients", new ListClientsCommand());
     commands.put("createClient", new CreateClientCommand());
     commands.put("saveClient", new SaveClientCommand());
+    commands.put("deleteClient", new DeleteClientCommand());
+    commands.put("editClient", new EditClientCommand());
+    commands.put("viewClient", new ViewClientCommand());
 
     // Bean Validation : Validator global
     try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {

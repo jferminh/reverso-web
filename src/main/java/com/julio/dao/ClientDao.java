@@ -240,7 +240,7 @@ public class ClientDao extends SocieteDao {
    * @param id l'ID du client à supprimer
    * @throws DaoException si une erreur survient ou si le client a des contrats
    */
-  public void delete(Integer id) throws DaoException {
+  public boolean delete(Integer id) throws DaoException {
     if (id == null || id <= 0) {
       throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
           "delete", id, "ID invalide");
@@ -294,6 +294,7 @@ public class ClientDao extends SocieteDao {
 
         connection.commit();
         log.info("Client supprimé avec succès : ID={}", id);
+        return true;
 
       } catch (Exception e) {
         connection.rollback();
@@ -370,6 +371,74 @@ public class ClientDao extends SocieteDao {
           "findByRaisonSociale",
           null,
           "Erreur lors de la recherche par raison sociale : " + SqlExceptionAnalyzer.analyze(e),
+          e
+      );
+    }
+  }
+
+  /**
+   * Recherche un client par son identifiant.
+   *
+   * @param id l'identifiant du client à rechercher
+   * @return le client trouvé, ou null si aucun client ne correspond
+   * @throws DaoException si une erreur survient lors de la recherche
+   */
+  public Client findById(Integer id) throws DaoException {
+    if (id == null || id <= 0) {
+      throw new DaoException(
+          DaoException.ErrorCode.INVALID_PARAMETER,
+          "findById",
+          id,
+          "L'ID doit être un entier positif non null"
+      );
+    }
+
+    String sql =
+        """
+        SELECT c.id_client, s.raison_sociale,
+        a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville,
+        s.telephone, s.email, s.commentaires,
+        c.chiffre_affaires, c.nb_employes
+        FROM client c
+        INNER JOIN societe s ON c.id_societe = s.id_societe
+        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+        WHERE c.id_client = ?
+        """;
+
+    // ✅ OPTIMISATION : try-with-resources (Fermeture automatique
+    // de Connection et PreparedStatement)
+    try (Connection connection = dbConnexion.getConnection();
+         PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+      pstmt.setInt(1, id);
+
+      // ✅ OPTIMISATION : try-with-resources imbriqué pour le ResultSet
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          try {
+            return mapResultSetToClient(rs);
+
+          } catch (ValidationException e) {
+            log.error("Erreur de validation lors du mapping du client ID={}", id, e);
+            throw new DaoException(
+                DaoException.ErrorCode.INVALID_PARAMETER,
+                "findById",
+                id,
+                "Données invalides pour le client : " + e.getMessage(),
+                e
+            );
+          }
+        }
+        return null; // Aucun client trouvé
+      }
+
+    } catch (SQLException e) {
+      log.error("Erreur SQL lors de findById avec ID={}", id, e);
+      throw new DaoException(
+          SqlExceptionAnalyzer.categorize(e),
+          "findById",
+          id,
+          "Erreur lors de la recherche du client : " + SqlExceptionAnalyzer.analyze(e),
           e
       );
     }

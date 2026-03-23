@@ -32,16 +32,7 @@ public abstract class AbstractClientCommand implements Icommand {
     Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank())
         ? Integer.parseInt(idAdresseStr) : null;
 
-    // 2. Nettoyage et conversion des nombres (Ta super logique regex !)
-    String caStr = request.getParameter("chiffreAffaires");
-    String nbStr = request.getParameter("nbEmployes");
-
-    long ca = (caStr != null && !caStr.isBlank())
-        ? Long.parseLong(caStr.replaceAll("[^0-9]", "")) : 0L;
-    int nb = (nbStr != null && !nbStr.isBlank())
-        ? Integer.parseInt(nbStr.replaceAll("[^0-9]", "")) : 0;
-
-    // 3. Construction de l'Adresse
+    // 2. Construction de l'Adresse
     Adresse adresse = Adresse.builder()
         .numeroRue(request.getParameter("numeroRue"))
         .nomRue(request.getParameter("nomRue"))
@@ -50,7 +41,7 @@ public abstract class AbstractClientCommand implements Icommand {
         .build();
     adresse.setId(idAdresse); // Injection de l'ID
 
-    // 4. Construction et retour du Client
+    // 3. Construction et retour du Client
     Client client = Client.builder()
         .raisonSociale(request.getParameter("raisonSociale"))
         .adresse(adresse)
@@ -58,6 +49,14 @@ public abstract class AbstractClientCommand implements Icommand {
         .email(request.getParameter("email"))
         .commentaires(request.getParameter("commentaires"))
         .build();
+
+    String caStr = request.getParameter("chiffreAffaires");
+    String nbStr = request.getParameter("nbEmployes");
+
+    long ca = (caStr != null && !caStr.isBlank())
+        ? Long.parseLong(caStr.replaceAll("[^0-9]", "")) : 0L;
+    int nb = (nbStr != null && !nbStr.isBlank())
+        ? Integer.parseInt(nbStr.replaceAll("[^0-9]", "")) : 0;
 
     client.setId(idClient); // Injection de l'ID
     client.setChiffreAffaires(ca);
