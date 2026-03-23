@@ -46,8 +46,8 @@ public class UnicityService {
     }
 
     try {
-      return (prospectDao.findByRaisonSociale(raisonSociale) != null) ||
-          (clientDao.findByRaisonSociale(raisonSociale) != null);
+      return (prospectDao.findByRaisonSociale(raisonSociale) != null)
+          || (clientDao.findByRaisonSociale(raisonSociale) != null);
     } catch (DaoException e) {
       log.error("Erreur lors de la vérification unicité raison sociale '{}'", raisonSociale, e);
       throw e;
@@ -58,20 +58,22 @@ public class UnicityService {
    * Vérifie l'unicité lors de la MODIFICATION d'un CLIENT.
    *
    * @param raisonSociale la raison sociale à vérifier
-   * @param clientIdAExclure l'ID du client en cours de modification
+   * @param clientIdaExclure l'ID du client en cours de modification
    * @return true si doublon, false sinon
    */
-  public boolean isRaisonSocialeDupliqueePourClient(String raisonSociale, Integer clientIdAExclure) throws DaoException {
+  public boolean isRaisonSocialeDupliqueePourClient(
+      String raisonSociale, Integer clientIdaExclure) throws DaoException {
     if (isRaisonSocialeDupliquee(raisonSociale)) {
       // Si on trouve un doublon, on vérifie si c'est EXACTEMENT le client qu'on modifie
       Client clientExistant = clientDao.findByRaisonSociale(raisonSociale);
 
       // S'il existe un client avec ce nom, et que ce n'est PAS le nôtre -> Doublon !
-      if (clientExistant != null && !clientExistant.getId().equals(clientIdAExclure)) {
+      if (clientExistant != null && !clientExistant.getId().equals(clientIdaExclure)) {
         return true;
       }
 
-      // S'il existe un prospect avec ce nom -> Doublon direct ! (Un prospect ne peut pas avoir l'ID d'un client)
+      // S'il existe un prospect avec ce nom -> Doublon direct !
+      // (Un prospect ne peut pas avoir l'ID d'un client)
       Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
       if (prospectExistant != null) {
         return true;
@@ -84,14 +86,15 @@ public class UnicityService {
    * Vérifie l'unicité lors de la MODIFICATION d'un PROSPECT.
    *
    * @param raisonSociale la raison sociale à vérifier
-   * @param prospectIdAExclure l'ID du prospect en cours de modification
+   * @param prospectIdaExclure l'ID du prospect en cours de modification
    * @return true si doublon, false sinon
    */
-  public boolean isRaisonSocialeDupliqueePourProspect(String raisonSociale, Integer prospectIdAExclure) throws DaoException {
+  public boolean isRaisonSocialeDupliqueePourProspect(
+      String raisonSociale, Integer prospectIdaExclure) throws DaoException {
     if (isRaisonSocialeDupliquee(raisonSociale)) {
 
       Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
-      if (prospectExistant != null && !prospectExistant.getId().equals(prospectIdAExclure)) {
+      if (prospectExistant != null && !prospectExistant.getId().equals(prospectIdaExclure)) {
         return true;
       }
 

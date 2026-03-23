@@ -18,7 +18,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"motDePasse", "sel"}) // Sécurité : on n'affiche jamais les mots de passe dans les logs
+@ToString(exclude = {"motDePasse", "sel"})
 @EqualsAndHashCode(of = "identifiant")
 @Builder
 public class Utilisateur implements Serializable {

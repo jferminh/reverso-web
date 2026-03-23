@@ -85,6 +85,10 @@ public class DatabaseConnexion {
     return dataSource.getConnection();
   }
 
+  /**
+   * Fermer les connexions.
+   *
+   */
   public void closePool() {
     if (dataSource != null && !dataSource.isClosed()) {
       dataSource.close();

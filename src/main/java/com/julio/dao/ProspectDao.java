@@ -27,6 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProspectDao extends SocieteDao {
 
+  /**
+   * Constructeur.
+   *
+   * @throws DaoException Exception
+   */
   public ProspectDao() throws DaoException {
     super();
   }
@@ -36,8 +41,8 @@ public class ProspectDao extends SocieteDao {
    */
   public Prospect save(Prospect prospect) throws DaoException {
     if (prospect == null) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-          , "save", null, "Le prospect est null");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "save", null, "Le prospect est null");
     }
 
     boolean isNew = (prospect.getId() == null || prospect.getId() <= 0);
@@ -51,24 +56,28 @@ public class ProspectDao extends SocieteDao {
           Integer societeId = createSociete(prospect, connection);
 
           String sql =
-          """
-          INSERT INTO prospect (id_societe, date_prospection, interesse) 
-          VALUES (?, ?, ?)
-          """;
-          try (PreparedStatement pstmt = connection.prepareStatement(sql
-              , Statement.RETURN_GENERATED_KEYS)) {
+              """
+                  INSERT INTO prospect (id_societe, date_prospection, interesse) 
+                  VALUES (?, ?, ?)
+              """;
+          try (PreparedStatement pstmt = connection.prepareStatement(
+              sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, societeId);
             pstmt.setDate(2, prospect.getDateProspection() != null
                 ? Date.valueOf(prospect.getDateProspection()) : null);
             pstmt.setInt(3, prospect.getInteresse() != null
                 ? prospect.getInteresse().toInt() : 0);
 
-            if (pstmt.executeUpdate() == 0)
+            if (pstmt.executeUpdate() == 0) {
               throw new SQLException("L'insertion du prospect a échoué");
+            }
 
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
-              if (rs.next()) prospect.setId(rs.getInt(1));
-              else throw new SQLException("Aucun ID généré pour le prospect");
+              if (rs.next()) {
+                prospect.setId(rs.getInt(1));
+              } else {
+                throw new SQLException("Aucun ID généré pour le prospect");
+              }
             }
           }
         } else {
@@ -78,9 +87,12 @@ public class ProspectDao extends SocieteDao {
           try (PreparedStatement pstmt = connection.prepareStatement(getSocieteSql)) {
             pstmt.setInt(1, prospect.getId());
             try (ResultSet rs = pstmt.executeQuery()) {
-              if (rs.next()) societeId = rs.getInt("id_societe");
-              else throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND
-                  , "save", prospect.getId(), "Introuvable");
+              if (rs.next()) {
+                societeId = rs.getInt("id_societe");
+              } else {
+                throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
+                    "save", prospect.getId(), "Introuvable");
+              }
             }
           }
 
@@ -91,23 +103,25 @@ public class ProspectDao extends SocieteDao {
           saveSociete(prospect, societeId, connection);
 
           String sql =
-          """
-          UPDATE prospect SET date_prospection = ?, interesse = ? 
-          WHERE id_prospect = ?
-          """;
+              """
+                  UPDATE prospect SET date_prospection = ?, interesse = ? 
+                  WHERE id_prospect = ?
+              """;
           try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setDate(1, prospect.getDateProspection() != null
                 ? Date.valueOf(prospect.getDateProspection()) : null);
             pstmt.setInt(2, prospect.getInteresse() != null
                 ? prospect.getInteresse().toInt() : 0);
             pstmt.setInt(3, prospect.getId());
-            if (pstmt.executeUpdate() == 0) throw new SQLException("Mise à jour échouée");
+            if (pstmt.executeUpdate() == 0) {
+              throw new SQLException("Mise à jour échouée");
+            }
           }
         }
 
         connection.commit();
-        log.info("Prospect {} avec succès : ID={}", isNew ? "créé" : "mis à jour"
-            , prospect.getId());
+        log.info("Prospect {} avec succès : ID={}", isNew ? "créé" : "mis à jour",
+            prospect.getId());
         return prospect;
 
       } catch (Exception e) {
@@ -117,21 +131,28 @@ public class ProspectDao extends SocieteDao {
       }
     } catch (SQLException e) {
       log.error("Erreur SQL lors du save()", e);
-      throw new DaoException(SqlExceptionAnalyzer.categorize(e)
-          , "save", prospect.getId(), "Erreur BDD", e);
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e),
+          "save", prospect.getId(), "Erreur BDD", e);
     }
   }
 
+  /**
+   * Find by all.
+   *
+   * @return Prospect
+   * @throws DaoException Exception
+   */
   public List<Prospect> findAll() throws DaoException {
     List<Prospect> prospects = new ArrayList<>();
-    String sql = """
-        SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse, 
-        s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
-        a.numero_rue, a.nom_rue, a.code_postal, a.ville
-        FROM prospect p
-        INNER JOIN societe s ON p.id_societe = s.id_societe
-        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
-        ORDER BY s.raison_sociale ASC
+    String sql =
+        """
+            SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse, 
+            s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
+            a.numero_rue, a.nom_rue, a.code_postal, a.ville
+            FROM prospect p
+            INNER JOIN societe s ON p.id_societe = s.id_societe
+            INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+            ORDER BY s.raison_sociale ASC
         """;
 
     try (Connection conn = dbConnexion.getConnection();
@@ -148,32 +169,42 @@ public class ProspectDao extends SocieteDao {
       return prospects;
     } catch (SQLException e) {
       log.error("Erreur SQL lors de findAll()", e);
-      throw new DaoException(SqlExceptionAnalyzer.categorize(e)
-          , "findAll", null, "Erreur lecture", e);
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e),
+          "findAll", null, "Erreur lecture", e);
     }
   }
 
+  /**
+   * Méthode findById.
+   *
+   * @param id identifiant
+   * @return prospect
+   * @throws DaoException exception
+   */
   public Prospect findById(Integer id) throws DaoException {
     if (id == null || id <= 0) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-          , "findById", id, "ID invalide");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "findById", id, "ID invalide");
     }
 
-    String sql = """
-        SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
-        s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
-        a.numero_rue, a.nom_rue, a.code_postal, a.ville
-        FROM prospect p
-        INNER JOIN societe s ON p.id_societe = s.id_societe
-        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
-        WHERE p.id_prospect = ?
+    String sql =
+        """
+            SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
+            s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
+            a.numero_rue, a.nom_rue, a.code_postal, a.ville
+            FROM prospect p
+            INNER JOIN societe s ON p.id_societe = s.id_societe
+            INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+            WHERE p.id_prospect = ?
         """;
 
     try (Connection conn = dbConnexion.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setInt(1, id);
       try (ResultSet rs = pstmt.executeQuery()) {
-        if (rs.next()) return mapResultSetToProspect(rs);
+        if (rs.next()) {
+          return mapResultSetToProspect(rs);
+        }
         return null;
       }
     } catch (SQLException | ValidationException e) {
@@ -182,9 +213,17 @@ public class ProspectDao extends SocieteDao {
     }
   }
 
+  /**
+   * Delete prospect.
+   *
+   * @param id identifiant
+   * @throws DaoException exception
+   */
   public void delete(Integer id) throws DaoException {
-    if (id == null || id <= 0) throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-        , "delete", id, "ID invalide");
+    if (id == null || id <= 0) {
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "delete", id, "ID invalide");
+    }
 
     try (Connection connection = dbConnexion.getConnection()) {
       connection.setAutoCommit(false);
@@ -193,11 +232,11 @@ public class ProspectDao extends SocieteDao {
         Integer adresseId = null;
 
         String getIdsSql =
-        """
-        SELECT p.id_societe, s.adresse_id FROM prospect p 
-        INNER JOIN societe s ON p.id_societe = s.id_societe 
-        WHERE p.id_prospect = ?
-        """;
+            """
+                SELECT p.id_societe, s.adresse_id FROM prospect p 
+                INNER JOIN societe s ON p.id_societe = s.id_societe 
+                WHERE p.id_prospect = ?
+            """;
         try (PreparedStatement pstmt = connection.prepareStatement(getIdsSql)) {
           pstmt.setInt(1, id);
           try (ResultSet rs = pstmt.executeQuery()) {
@@ -205,8 +244,8 @@ public class ProspectDao extends SocieteDao {
               societeId = rs.getInt("id_societe");
               adresseId = rs.getInt("adresse_id");
             } else {
-              throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND
-                  , "delete", id, "Introuvable");
+              throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
+                  "delete", id, "Introuvable");
             }
           }
         }
@@ -214,7 +253,9 @@ public class ProspectDao extends SocieteDao {
         try (PreparedStatement pstmt = connection.prepareStatement(
             "DELETE FROM prospect WHERE id_prospect = ?")) {
           pstmt.setInt(1, id);
-          if (pstmt.executeUpdate() == 0) throw new SQLException("Aucune ligne supprimée");
+          if (pstmt.executeUpdate() == 0) {
+            throw new SQLException("Aucune ligne supprimée");
+          }
         }
 
         this.deleteSociete(connection, societeId);
@@ -256,14 +297,14 @@ public class ProspectDao extends SocieteDao {
 
     String sql =
         """
-        SELECT p.id_prospect, s.raison_sociale,
-        a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville, 
-        s.telephone, s.email, s.commentaires,
-        p.date_prospection, p.interesse 
-        FROM prospect p 
-        INNER JOIN societe s ON p.id_societe = s.id_societe
-        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
-        WHERE s.raison_sociale = ?
+            SELECT p.id_prospect, s.raison_sociale,
+            a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville, 
+            s.telephone, s.email, s.commentaires,
+            p.date_prospection, p.interesse 
+            FROM prospect p 
+            INNER JOIN societe s ON p.id_societe = s.id_societe
+            INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+            WHERE s.raison_sociale = ?
         """;
 
     // ✅ OPTIMISATION : try-with-resources (fermeture auto de Connection et PreparedStatement)
@@ -279,8 +320,8 @@ public class ProspectDao extends SocieteDao {
             return mapResultSetToProspect(rs);
 
           } catch (ValidationException e) {
-            log.error("Erreur validation données prospect avec raison sociale '{}'"
-                , raisonSociale, e);
+            log.error("Erreur validation données prospect avec raison sociale '{}'",
+                raisonSociale, e);
             throw new DaoException(
                 DaoException.ErrorCode.INVALID_PARAMETER,
                 "findByRaisonSociale",

@@ -76,10 +76,11 @@ public abstract class SocieteDao {
       }
     }
 
-    String sql = """
-    INSERT INTO societe (raison_sociale, adresse_id, telephone, email, commentaires) 
-    VALUES (?, ?, ?, ?, ?)
-    """;
+    String sql =
+        """
+            INSERT INTO societe (raison_sociale, adresse_id, telephone, email, commentaires) 
+            VALUES (?, ?, ?, ?, ?)
+        """;
 
     // OPTIMISATION : try-with-resources. Le PreparedStatement se ferme tout seul !
     try (PreparedStatement pstmt =
@@ -109,10 +110,10 @@ public abstract class SocieteDao {
     } catch (SQLException sqlEx) {
       log.error("Erreur SQL lors de la création de la société", sqlEx);
       throw new DaoException(
-          SqlExceptionAnalyzer.categorize(sqlEx)
-          , "createSociete"
-          , null
-          , "Erreur création société", sqlEx);
+          SqlExceptionAnalyzer.categorize(sqlEx),
+          "createSociete",
+          null,
+          "Erreur création société", sqlEx);
     }
   }
 
@@ -122,14 +123,15 @@ public abstract class SocieteDao {
   protected void saveSociete(Societe societe, Integer societeId, Connection connection)
       throws DaoException {
     if (societe == null || societeId == null || connection == null) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-          , "saveSociete", societeId, "Paramètres invalides");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "saveSociete", societeId, "Paramètres invalides");
     }
 
-    String sql = """
-        UPDATE societe
-        SET raison_sociale = ?, telephone = ?, email = ?, commentaires = ?
-        WHERE id_societe = ?
+    String sql =
+        """
+            UPDATE societe
+            SET raison_sociale = ?, telephone = ?, email = ?, commentaires = ?
+            WHERE id_societe = ?
         """;
 
     // OPTIMISATION : try-with-resources
@@ -149,18 +151,11 @@ public abstract class SocieteDao {
 
       if (SqlExceptionAnalyzer.isUniqueConstraintViolation(e)) {
         throw new DaoException(
-            DaoException.ErrorCode.UNIQUE_CONSTRAINT_VIOLATION
-            , "saveSociete"
-            , societeId
-            , "La raison sociale existe déjà"
-            , e);
+            DaoException.ErrorCode.UNIQUE_CONSTRAINT_VIOLATION,
+            "saveSociete", societeId, "La raison sociale existe déjà", e);
       }
       throw new DaoException(
-          SqlExceptionAnalyzer.categorize(e)
-          , "saveSociete"
-          , societeId
-          , "Erreur mise à jour"
-          , e);
+          SqlExceptionAnalyzer.categorize(e), "saveSociete", societeId, "Erreur mise à jour", e);
     }
   }
 
@@ -169,8 +164,8 @@ public abstract class SocieteDao {
    */
   protected void deleteSociete(Connection connection, Integer societeId) throws DaoException {
     if (connection == null || societeId == null || societeId <= 0) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER, "deleteSociete"
-          , societeId, "Paramètres invalides");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "deleteSociete", societeId, "Paramètres invalides");
     }
 
     String sql = "DELETE FROM societe WHERE id_societe = ?";
@@ -183,20 +178,20 @@ public abstract class SocieteDao {
         log.debug("Société supprimée : ID={}", societeId);
       } else {
         log.warn("Aucune société trouvée avec l'ID {}", societeId);
-        throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND, "deleteSociete"
-            , societeId, "Introuvable");
+        throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
+            "deleteSociete", societeId, "Introuvable");
       }
 
     } catch (SQLException e) {
       log.error("Erreur SQL lors de la suppression de la société ID={}", societeId, e);
 
       if (SqlExceptionAnalyzer.isForeignKeyViolation(e)) {
-        throw new DaoException(DaoException.ErrorCode.FOREIGN_KEY_VIOLATION
-            , "deleteSociete", societeId,
+        throw new DaoException(DaoException.ErrorCode.FOREIGN_KEY_VIOLATION,
+            "deleteSociete", societeId,
             "Impossible de supprimer, entité référencée", e);
       }
-      throw new DaoException(SqlExceptionAnalyzer.categorize(e), "deleteSociete"
-          , societeId, "Erreur suppression", e);
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e),
+          "deleteSociete", societeId, "Erreur suppression", e);
     }
   }
 }

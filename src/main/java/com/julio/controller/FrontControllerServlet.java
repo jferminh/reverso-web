@@ -39,7 +39,7 @@ public class FrontControllerServlet extends HttpServlet {
     commands = new HashMap<>();
 
     // 1) Commandes par défaut (accueil et authentification)
-    commands.put(null, new AccueilCommand());
+    commands.put(null, new LoginCommand());
     commands.put("accueil", new AccueilCommand());
     commands.put("login", new LoginCommand());
 

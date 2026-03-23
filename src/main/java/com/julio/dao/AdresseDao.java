@@ -29,6 +29,11 @@ public class AdresseDao {
 
   private final DatabaseConnexion dbConnexion;
 
+  /**
+   * Constructeur.
+   *
+   * @throws DaoException Dao Exception
+   */
   public AdresseDao() throws DaoException {
     try {
       this.dbConnexion = DatabaseConnexion.getInstance();
@@ -58,8 +63,8 @@ public class AdresseDao {
 
     } catch (SQLException | ValidationException e) {
       log.error("Erreur lors de la récupération de toutes les adresses", e);
-      throw new DaoException(DaoException.ErrorCode.READ_ERROR
-          , "findAll", null, "Erreur de lecture", e);
+      throw new DaoException(DaoException.ErrorCode.READ_ERROR,
+          "findAll", null, "Erreur de lecture", e);
     }
   }
 
@@ -68,14 +73,15 @@ public class AdresseDao {
    */
   public Adresse findById(Integer id) throws DaoException {
     if (id == null || id <= 0) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER, "findById", id, "ID invalide");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "findById", id, "ID invalide");
     }
 
     String sql =
-    """
-    SELECT id_adresse, numero_rue, nom_rue, code_postal, ville FROM adresse  
-    WHERE id_adresse = ?
-    """;
+        """
+            SELECT id_adresse, numero_rue, nom_rue, code_postal, ville FROM adresse  
+            WHERE id_adresse = ?
+        """;
 
     try (Connection conn = dbConnexion.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -89,8 +95,8 @@ public class AdresseDao {
       }
     } catch (SQLException | ValidationException e) {
       log.error("Erreur lors de la recherche de l'adresse ID={}", id, e);
-      throw new DaoException(DaoException.ErrorCode.READ_ERROR
-          , "findById", id, "Erreur de lecture", e);
+      throw new DaoException(DaoException.ErrorCode.READ_ERROR,
+          "findById", id, "Erreur de lecture", e);
     }
   }
 
@@ -102,12 +108,12 @@ public class AdresseDao {
    */
   public Adresse save(Adresse adresse, Connection connection) throws DaoException {
     if (adresse == null) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-          , "save", null, "L'adresse est null");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "save", null, "L'adresse est null");
     }
     if (connection == null) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-          , "save", adresse.getId(), "Connexion null");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "save", adresse.getId(), "Connexion null");
     }
 
     boolean isNew = (adresse.getId() == null || adresse.getId() <= 0);
@@ -116,12 +122,12 @@ public class AdresseDao {
       if (isNew) {
         // ================== LOGIQUE CREATE ==================
         String sql =
-        """
-        INSERT INTO adresse (numero_rue, nom_rue, code_postal, ville) 
-        VALUES (?, ?, ?, ?)
-        """;
-        try (PreparedStatement pstmt = connection.prepareStatement(sql
-            , Statement.RETURN_GENERATED_KEYS)) {
+            """
+                INSERT INTO adresse (numero_rue, nom_rue, code_postal, ville) 
+                VALUES (?, ?, ?, ?)
+            """;
+        try (PreparedStatement pstmt = connection.prepareStatement(sql,
+            Statement.RETURN_GENERATED_KEYS)) {
           pstmt.setString(1, adresse.getNumeroRue());
           pstmt.setString(2, adresse.getNomRue());
           pstmt.setString(3, adresse.getCodePostal());
@@ -142,10 +148,10 @@ public class AdresseDao {
       } else {
         // ================== LOGIQUE UPDATE ==================
         String sql =
-        """
-        UPDATE adresse SET numero_rue = ?, nom_rue = ?, code_postal = ?, ville = ? 
-        WHERE id_adresse = ?
-        """;
+            """
+                UPDATE adresse SET numero_rue = ?, nom_rue = ?, code_postal = ?, ville = ? 
+                WHERE id_adresse = ?
+            """;
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
           pstmt.setString(1, adresse.getNumeroRue());
           pstmt.setString(2, adresse.getNomRue());
@@ -164,8 +170,8 @@ public class AdresseDao {
 
     } catch (SQLException e) {
       log.error("Erreur SQL lors du save() de l'adresse", e);
-      throw new DaoException(SqlExceptionAnalyzer.categorize(e)
-          , "save", adresse.getId(), "Erreur BDD", e);
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e),
+          "save", adresse.getId(), "Erreur BDD", e);
     }
   }
 
@@ -175,21 +181,21 @@ public class AdresseDao {
   protected void deleteAdresse(Connection connection, Integer adresseId)
       throws DaoException {
     if (connection == null || adresseId == null || adresseId <= 0) {
-      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER
-          , "deleteAdresse", adresseId, "Paramètres invalides");
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "deleteAdresse", adresseId, "Paramètres invalides");
     }
 
     String sql = "DELETE FROM adresse WHERE id_adresse = ?";
     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
       pstmt.setInt(1, adresseId);
       if (pstmt.executeUpdate() <= 0) {
-        throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND
-            , "deleteAdresse", adresseId, "Introuvable");
+        throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
+            "deleteAdresse", adresseId, "Introuvable");
       }
     } catch (SQLException e) {
       log.error("Erreur SQL lors de la suppression de l'adresse ID={}", adresseId, e);
-      throw new DaoException(SqlExceptionAnalyzer.categorize(e)
-          , "deleteAdresse", adresseId, "Erreur BDD", e);
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e),
+          "deleteAdresse", adresseId, "Erreur BDD", e);
     }
   }
 

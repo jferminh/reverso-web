@@ -1,12 +1,32 @@
-document.addEventListener("DOMContentLoaded", function() {
-    // Identifiants de démo (front-end only, ECF)
-    const DEMO_USER = "admin";
-    const DEMO_MDP = "afpa2026";
+document.addEventListener("DOMContentLoaded", () => {
 
-    // ── Helpers validation ────────────────────────────────────────────
-    function validerChamp(champ, erreurId) {
+    // ── 1. Afficher/masquer mot de passe (UX & Accessibilité) ──────────
+    const brancherToggleMdp = (inputId, btnId) => {
+        const input = document.getElementById(inputId);
+        const btn = document.getElementById(btnId);
+        if (!input || !btn) return;
+
+        btn.addEventListener('click', () => {
+            const estVisible = input.type === 'text';
+            input.type = estVisible ? 'password' : 'text';
+            btn.setAttribute('aria-pressed', String(!estVisible));
+            btn.setAttribute('aria-label', estVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+            // Logique améliorée : l'icône change dynamiquement
+            btn.textContent = estVisible ? '👁' : '🙈';
+            input.focus();
+        });
+    };
+
+    brancherToggleMdp('hero-mdp', 'btn-toggle-hero-mdp');
+    brancherToggleMdp('modal-mdp', 'btn-toggle-modal-mdp');
+
+    // ── 2. Helper de validation côté client (Front-end) ─────────────────
+    const validerChamp = (champ, erreurId) => {
         const zone = document.getElementById(erreurId);
-        if (champ.validity.valid) {
+        if (!champ) return false;
+
+        // On vérifie si le champ respecte le "required" de HTML5
+        if (champ.validity.valid && champ.value.trim() !== "") {
             champ.classList.remove("is-invalid");
             champ.classList.add("is-valid");
             champ.removeAttribute("aria-invalid");
@@ -14,116 +34,57 @@ document.addEventListener("DOMContentLoaded", function() {
                 zone.textContent = "";
                 zone.hidden = true;
             }
-            return true
+            return true;
         } else {
             champ.classList.remove("is-valid");
             champ.classList.add("is-invalid");
             champ.setAttribute("aria-invalid", "true");
             if (zone) {
-                zone.textContent = champ.validity.valueMissing
-                ? (champ.id.includes("mdp")
+                zone.textContent = champ.id.includes("mdp")
                     ? "Le mot de passe est obligatoire."
-                    : "L\'identifiante est obligatoire.")
-                    : champ.validationMessage;
+                    : "L'identifiant est obligatoire.";
                 zone.hidden = false;
             }
             return false;
         }
-    }
+    };
 
-    // ── Afficher/masquer mot de passe ────────────────────────────────
-    function brancherToggleMdp(inputId, btnId) {
-        const input = document.getElementById(inputId);
-        const btn   = document.getElementById(btnId);
-        if (!input || !btn) return;
-        btn.addEventListener('click', function () {
-            const estVisible = input.type === 'text';
-            input.type = estVisible ? 'password' : 'text';
-            btn.setAttribute('aria-pressed', String(!estVisible));
-            btn.setAttribute('aria-label',
-                estVisible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
-            btn.textContent = estVisible ? '👁' : '🙈';
-            input.focus();
-        });
-    }
+    // ── 3. Logique de soumission vers Tomcat ────────────────────────────
+    const gererFormulaire = (formId, idChamp, idErrChamp, mdpChamp, mdpErrChamp) => {
+        const form = document.getElementById(formId);
+        if (!form) return;
 
-    brancherToggleMdp('hero-mdp',   'btn-toggle-hero-mdp');
-    brancherToggleMdp('modal-mdp',  'btn-toggle-modal-mdp');
+        const champIdentifiant = document.getElementById(idChamp);
+        const champMdp = document.getElementById(mdpChamp);
 
-    // ── Logique de soumission commune ────────────────────────────────
-    function soumettre(identifiantId, mdpId, identifiantErrId, mdpErrId) {
-        const champId  = document.getElementById(identifiantId);
-        const champMdp = document.getElementById(mdpId);
-        if (!champId || !champMdp) return;
+        // Validation en temps réel quand l'utilisateur quitte le champ (blur) ou tape (input)
+        [champIdentifiant, champMdp].forEach(champ => {
+            if (!champ) return;
+            const errId = champ.id === idChamp ? idErrChamp : mdpErrChamp;
 
-        const okId  = validerChamp(champId,  identifiantErrId);
-        const okMdp = validerChamp(champMdp, mdpErrId);
-
-        if (!okId) { champId.focus();  return; }
-        if (!okMdp) { champMdp.focus(); return; }
-
-        // Vérification identifiants (démo front-end)
-        if (champId.value === DEMO_USER && champMdp.value === DEMO_MDP) {
-            // Stocker la session
-            localStorage.setItem('user-session', JSON.stringify({
-                user: champId.value,
-                date: Date.now()
-            }));
-            // Rediriger vers le tableau de bord
-            window.location.href = 'index.html';
-        } else {
-            // Mauvais identifiants : afficher erreur sur les deux champs
-            [champId, champMdp].forEach(function(c) {
-                c.classList.add('is-invalid');
-                c.classList.remove('is-valid');
+            champ.addEventListener('blur', () => validerChamp(champ, errId));
+            champ.addEventListener('input', () => {
+                if (champ.classList.contains('is-invalid')) validerChamp(champ, errId);
             });
-            const zoneId = document.getElementById(identifiantErrId);
-            if (zoneId) {
-                zoneId.textContent = 'Identifiant ou mot de passe incorrect.';
-                zoneId.hidden = false;
+        });
+
+        // Interception du clic sur "Se connecter"
+        form.addEventListener('submit', (e) => {
+            const isIdValid = validerChamp(champIdentifiant, idErrChamp);
+            const isMdpValid = validerChamp(champMdp, mdpErrChamp);
+
+            // ⛔ Si le Front-end détecte des champs vides : on bloque l'envoi au serveur
+            if (!isIdValid || !isMdpValid) {
+                e.preventDefault(); // Annule la requête POST
+                if (!isIdValid) champIdentifiant.focus();
+                else champMdp.focus();
             }
-            champId.focus();
-        }
-    }
-
-    // ── Formulaire carte HERO (desktop) ─────────────────────────────
-    const formHero = document.getElementById('form-connexion-hero');
-    if (formHero) {
-        ['hero-identifiant', 'hero-mdp'].forEach(function(id) {
-            const champ = document.getElementById(id);
-            if (!champ) return;
-            champ.addEventListener('blur', function() {
-                validerChamp(champ, id + '-erreur');
-            });
-            champ.addEventListener('input', function() {
-                if (champ.classList.contains('is-invalid'))
-                    validerChamp(champ, id + '-erreur');
-            });
+            // ✅ Si tout est OK : on ne fait RIEN !
+            // Le navigateur va envoyer naturellement le POST vers le FrontController Java.
         });
+    };
 
-        formHero.addEventListener('submit', function(e) {
-            e.preventDefault();
-            soumettre('hero-identifiant', 'hero-mdp',
-                'hero-identifiant-erreur', 'hero-mdp-erreur');
-        });
-    }
-
-    // ── Formulaire MODAL (mobile) ────────────────────────────────────
-    const formModal = document.getElementById('form-connexion-modal');
-    if (formModal) {
-        ['modal-identifiant', 'modal-mdp'].forEach(function(id) {
-            const champ = document.getElementById(id);
-            if (!champ) return;
-            champ.addEventListener('blur', function() {
-                validerChamp(champ, id.replace('modal-', 'modal-') + '-erreur'
-                    .replace('modal-identifiant-erreur', 'modal-id-erreur'));
-            });
-        });
-
-        formModal.addEventListener('submit', function(e) {
-            e.preventDefault();
-            soumettre('modal-identifiant', 'modal-mdp',
-                'modal-id-erreur', 'modal-mdp-erreur');
-        });
-    }
+    // Initialisation des deux formulaires (Desktop et Mobile)
+    gererFormulaire('form-connexion-hero', 'hero-identifiant', 'hero-identifiant-erreur', 'hero-mdp', 'hero-mdp-erreur');
+    gererFormulaire('form-connexion-modal', 'modal-identifiant', 'modal-id-erreur', 'modal-mdp', 'modal-mdp-erreur');
 });
