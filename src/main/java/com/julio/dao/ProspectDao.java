@@ -7,7 +7,6 @@ import com.julio.model.Interesse;
 import com.julio.model.Prospect;
 import com.julio.util.SqlExceptionAnalyzer;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,17 +17,22 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * DAO pour la gestion de la persistance des prospects.
- * Optimisé avec une méthode unique save() et try-with-resources.
+ * DAO (Data Access Object) dédié à la persistance de l'entité {@link Prospect}.
+ *
+ * <p>Hérite de {@link SocieteDao} pour réutiliser la logique d'enregistrement
+ * des données communes. Implémente le pattern "try-with-resources",
+ * garantit l'intégrité ACID grâce aux transactions manuelles, et utilise l'API JDBC 4.2
+ * pour une gestion native des objets java.time (LocalDate).
+ * </p>
  *
  * @author Julio FERMIN
- * @version 3.0
+ * @version 4.0
  */
 @Slf4j
 public class ProspectDao extends SocieteDao {
 
   /**
-   * Constructeur.
+   * Constructeur Prospect.
    *
    * @throws DaoException Exception
    */
@@ -37,22 +41,21 @@ public class ProspectDao extends SocieteDao {
   }
 
   /**
-   * Méthode UNIQUE pour insérer (create) ou mettre à jour (update) un prospect.
+   * Sauvegarde un prospect (Création ou Mise à jour) dans une transaction globale.
    */
   public Prospect save(Prospect prospect) throws DaoException {
     if (prospect == null) {
       throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
-          "save", null, "Le prospect est null");
+          "save", null, "Le prospect fourni est null");
     }
 
     boolean isNew = (prospect.getId() == null || prospect.getId() <= 0);
 
     try (Connection connection = dbConnexion.getConnection()) {
-      connection.setAutoCommit(false);
+      connection.setAutoCommit(false); // Début de la transaction
 
       try {
         if (isNew) {
-          // ================== LOGIQUE CREATE ==================
           Integer societeId = createSociete(prospect, connection);
 
           String sql =
@@ -63,10 +66,8 @@ public class ProspectDao extends SocieteDao {
           try (PreparedStatement pstmt = connection.prepareStatement(
               sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, societeId);
-            pstmt.setDate(2, prospect.getDateProspection() != null
-                ? Date.valueOf(prospect.getDateProspection()) : null);
-            pstmt.setInt(3, prospect.getInteresse() != null
-                ? prospect.getInteresse().toInt() : 0);
+            pstmt.setObject(2, prospect.getDateProspection()); // JDBC 4.2
+            pstmt.setInt(3, prospect.getInteresse() != null ? prospect.getInteresse().toInt() : 0);
 
             if (pstmt.executeUpdate() == 0) {
               throw new SQLException("L'insertion du prospect a échoué");
@@ -76,12 +77,11 @@ public class ProspectDao extends SocieteDao {
               if (rs.next()) {
                 prospect.setId(rs.getInt(1));
               } else {
-                throw new SQLException("Aucun ID généré pour le prospect");
+                throw new SQLException("Échec de la récupération de l'ID généré");
               }
             }
           }
         } else {
-          // ================== LOGIQUE UPDATE ==================
           Integer societeId = null;
           String getSocieteSql = "SELECT id_societe FROM prospect WHERE id_prospect = ?";
           try (PreparedStatement pstmt = connection.prepareStatement(getSocieteSql)) {
@@ -91,7 +91,7 @@ public class ProspectDao extends SocieteDao {
                 societeId = rs.getInt("id_societe");
               } else {
                 throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
-                    "save", prospect.getId(), "Introuvable");
+                    "save", prospect.getId(), "Prospect introuvable");
               }
             }
           }
@@ -108,13 +108,11 @@ public class ProspectDao extends SocieteDao {
                   WHERE id_prospect = ?
               """;
           try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setDate(1, prospect.getDateProspection() != null
-                ? Date.valueOf(prospect.getDateProspection()) : null);
-            pstmt.setInt(2, prospect.getInteresse() != null
-                ? prospect.getInteresse().toInt() : 0);
+            pstmt.setObject(1, prospect.getDateProspection()); // JDBC 4.2
+            pstmt.setInt(2, prospect.getInteresse() != null ? prospect.getInteresse().toInt() : 0);
             pstmt.setInt(3, prospect.getId());
             if (pstmt.executeUpdate() == 0) {
-              throw new SQLException("Mise à jour échouée");
+              throw new SQLException("Mise à jour du prospect échouée");
             }
           }
         }
@@ -125,30 +123,35 @@ public class ProspectDao extends SocieteDao {
         return prospect;
 
       } catch (Exception e) {
-        connection.rollback();
-        log.warn("Rollback lors de la sauvegarde du prospect : {}", e.getMessage());
-        throw e;
+        log.warn("Erreur transactionnelle (save). Rollback en cours... Cause : {}", e.getMessage());
+        try {
+          connection.rollback();
+        } catch (SQLException ex) {
+          log.error("Échec critique du Rollback !", ex);
+        }
+        if (e instanceof DaoException) {
+          throw (DaoException) e;
+        }
+        throw new DaoException(DaoException.ErrorCode.TRANSACTION_ERROR,
+            "save", prospect.getId(), "Erreur lors de la transaction", e);
       }
     } catch (SQLException e) {
-      log.error("Erreur SQL lors du save()", e);
+      log.error("Erreur d'accès BDD lors du save()", e);
       throw new DaoException(SqlExceptionAnalyzer.categorize(e),
-          "save", prospect.getId(), "Erreur BDD", e);
+          "save", prospect.getId(), "Erreur SQL BDD", e);
     }
   }
 
   /**
-   * Find by all.
-   *
-   * @return Prospect
-   * @throws DaoException Exception
+   * Récupère la liste complète des prospects.
    */
   public List<Prospect> findAll() throws DaoException {
     List<Prospect> prospects = new ArrayList<>();
     String sql =
         """
             SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse, 
-            s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
-            a.numero_rue, a.nom_rue, a.code_postal, a.ville
+                   s.raison_sociale, s.telephone, s.email, s.commentaires,
+                   a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville
             FROM prospect p
             INNER JOIN societe s ON p.id_societe = s.id_societe
             INNER JOIN adresse a ON s.adresse_id = a.id_adresse
@@ -163,23 +166,20 @@ public class ProspectDao extends SocieteDao {
         try {
           prospects.add(mapResultSetToProspect(rs));
         } catch (ValidationException e) {
-          log.warn("Prospect ignoré car invalide (ID={})", rs.getInt("id_prospect"));
+          log.warn("Prospect ignoré car ses données sont corrompues (ID={})",
+              rs.getInt("id_prospect"));
         }
       }
       return prospects;
     } catch (SQLException e) {
       log.error("Erreur SQL lors de findAll()", e);
       throw new DaoException(SqlExceptionAnalyzer.categorize(e),
-          "findAll", null, "Erreur lecture", e);
+          "findAll", null, "Erreur lecture des prospects", e);
     }
   }
 
   /**
-   * Méthode findById.
-   *
-   * @param id identifiant
-   * @return prospect
-   * @throws DaoException exception
+   * Trouve un prospect par son identifiant.
    */
   public Prospect findById(Integer id) throws DaoException {
     if (id == null || id <= 0) {
@@ -190,8 +190,8 @@ public class ProspectDao extends SocieteDao {
     String sql =
         """
             SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
-            s.raison_sociale, a.id_adresse, s.telephone, s.email, s.commentaires,
-            a.numero_rue, a.nom_rue, a.code_postal, a.ville
+                   s.raison_sociale, s.telephone, s.email, s.commentaires,
+                   a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville
             FROM prospect p
             INNER JOIN societe s ON p.id_societe = s.id_societe
             INNER JOIN adresse a ON s.adresse_id = a.id_adresse
@@ -209,15 +209,13 @@ public class ProspectDao extends SocieteDao {
       }
     } catch (SQLException | ValidationException e) {
       log.error("Erreur lors de findById", e);
-      throw new DaoException(DaoException.ErrorCode.READ_ERROR, "findById", id, "Erreur", e);
+      throw new DaoException(DaoException.ErrorCode.READ_ERROR,
+          "findById", id, "Erreur lecture unitaire", e);
     }
   }
 
   /**
-   * Delete prospect.
-   *
-   * @param id identifiant
-   * @throws DaoException exception
+   * Supprime un prospect et ses entités liées (si non référencées ailleurs).
    */
   public void delete(Integer id) throws DaoException {
     if (id == null || id <= 0) {
@@ -226,7 +224,8 @@ public class ProspectDao extends SocieteDao {
     }
 
     try (Connection connection = dbConnexion.getConnection()) {
-      connection.setAutoCommit(false);
+      connection.setAutoCommit(false); // Début transaction
+
       try {
         Integer societeId = null;
         Integer adresseId = null;
@@ -245,7 +244,7 @@ public class ProspectDao extends SocieteDao {
               adresseId = rs.getInt("adresse_id");
             } else {
               throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
-                  "delete", id, "Introuvable");
+                  "delete", id, "Prospect introuvable");
             }
           }
         }
@@ -254,7 +253,7 @@ public class ProspectDao extends SocieteDao {
             "DELETE FROM prospect WHERE id_prospect = ?")) {
           pstmt.setInt(1, id);
           if (pstmt.executeUpdate() == 0) {
-            throw new SQLException("Aucune ligne supprimée");
+            throw new SQLException("Aucune ligne supprimée dans la table prospect");
           }
         }
 
@@ -268,84 +267,68 @@ public class ProspectDao extends SocieteDao {
         log.info("Prospect supprimé avec succès : ID={}", id);
 
       } catch (Exception e) {
-        connection.rollback();
-        log.warn("Rollback lors de la suppression du prospect", e);
-        throw e;
+        log.warn("Erreur transactionnelle (delete). Rollback en cours...");
+        try {
+          connection.rollback();
+        } catch (SQLException ex) {
+          log.error("Échec critique du Rollback !", ex);
+        }
+        if (e instanceof DaoException) {
+          throw (DaoException) e;
+        }
+        throw new DaoException(DaoException.ErrorCode.TRANSACTION_ERROR,
+            "delete", id, "Erreur lors de la suppression", e);
       }
     } catch (SQLException e) {
       log.error("Erreur SQL lors de la suppression", e);
-      throw new DaoException(SqlExceptionAnalyzer.categorize(e), "delete", id, "Erreur", e);
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e), "delete", id, "Erreur BDD", e);
     }
   }
 
   /**
-   * Recherche un prospect par sa raison sociale (exact match, sensible à la casse).
-   *
-   * @param raisonSociale la raison sociale à rechercher
-   * @return le prospect trouvé ou null si non trouvé
-   * @throws DaoException si une erreur survient lors de la recherche
+   * Recherche un prospect par sa raison sociale (Exact match).
    */
   public Prospect findByRaisonSociale(String raisonSociale) throws DaoException {
     if (raisonSociale == null || raisonSociale.trim().isEmpty()) {
-      throw new DaoException(
-          DaoException.ErrorCode.INVALID_PARAMETER,
-          "findByRaisonSociale",
-          null,
-          "La raison sociale ne peut pas être null ou vide"
-      );
+      throw new DaoException(DaoException.ErrorCode.INVALID_PARAMETER,
+          "findByRaisonSociale", null, "La raison sociale est vide");
     }
 
     String sql =
         """
-            SELECT p.id_prospect, s.raison_sociale,
-            a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville, 
-            s.telephone, s.email, s.commentaires,
-            p.date_prospection, p.interesse 
+            SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
+                   s.raison_sociale, s.telephone, s.email, s.commentaires,
+                   a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville
             FROM prospect p 
             INNER JOIN societe s ON p.id_societe = s.id_societe
             INNER JOIN adresse a ON s.adresse_id = a.id_adresse
             WHERE s.raison_sociale = ?
         """;
 
-    // ✅ OPTIMISATION : try-with-resources (fermeture auto de Connection et PreparedStatement)
     try (Connection connection = dbConnexion.getConnection();
          PreparedStatement pstmt = connection.prepareStatement(sql)) {
-
       pstmt.setString(1, raisonSociale);
-
-      // ✅ OPTIMISATION : try-with-resources imbriqué pour le ResultSet
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
           try {
             return mapResultSetToProspect(rs);
-
           } catch (ValidationException e) {
-            log.error("Erreur validation données prospect avec raison sociale '{}'",
-                raisonSociale, e);
-            throw new DaoException(
-                DaoException.ErrorCode.INVALID_PARAMETER,
-                "findByRaisonSociale",
-                null,
-                "Données invalides pour le prospect : " + e.getMessage(),
-                e
-            );
+            throw new DaoException(DaoException.ErrorCode.READ_ERROR,
+                "findByRaisonSociale", null, "Données corrompues", e);
           }
         }
-        return null; // Aucun prospect trouvé
+        return null;
       }
-
     } catch (SQLException e) {
       log.error("Erreur SQL lors de findByRaisonSociale avec '{}'", raisonSociale, e);
-      throw new DaoException(
-          SqlExceptionAnalyzer.categorize(e),
-          "findByRaisonSociale",
-          null,
-          "Erreur lors de la recherche par raison sociale : " + SqlExceptionAnalyzer.analyze(e),
-          e
-      );
+      throw new DaoException(SqlExceptionAnalyzer.categorize(e),
+          "findByRaisonSociale", null, "Erreur SQL", e);
     }
   }
 
+  /**
+   * Vérifie si une adresse est partagée par d'autres sociétés avant suppression.
+   */
   private boolean isAdresseReferencee(Connection connection, Integer adresseId)
       throws SQLException {
     try (PreparedStatement pstmt = connection.prepareStatement(
@@ -357,10 +340,11 @@ public class ProspectDao extends SocieteDao {
     }
   }
 
-  // J'ai omis findByRaisonSociale par concision, mais il s'adapte exactement comme findAll()
-
+  /**
+   * Mappe la ligne actuelle du ResultSet vers une entité Prospect.
+   */
   private Prospect mapResultSetToProspect(ResultSet rs)
-      throws SQLException, DaoException, ValidationException {
+      throws SQLException, ValidationException {
     Adresse adresse = Adresse.builder()
         .numeroRue(rs.getString("numero_rue"))
         .nomRue(rs.getString("nom_rue"))
@@ -369,8 +353,8 @@ public class ProspectDao extends SocieteDao {
         .build();
     adresse.setId(rs.getInt("id_adresse"));
 
-    java.sql.Date sqlDate = rs.getDate("date_prospection");
-    LocalDate dateProspection = sqlDate != null ? sqlDate.toLocalDate() : null;
+    // JDBC 4.2 : Lecture directe en LocalDate !
+    LocalDate dateProspection = rs.getObject("date_prospection", LocalDate.class);
 
     Prospect prospect = Prospect.builder()
         .raisonSociale(rs.getString("raison_sociale"))
@@ -381,6 +365,7 @@ public class ProspectDao extends SocieteDao {
         .dateProspection(dateProspection)
         .interesse(Interesse.fromInt(rs.getInt("interesse")))
         .build();
+
     prospect.setId(rs.getInt("id_prospect"));
 
     return prospect;

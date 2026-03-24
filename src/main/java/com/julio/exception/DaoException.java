@@ -1,11 +1,15 @@
 package com.julio.exception;
 
 /**
- * Exception de base pour toutes les erreurs liées aux opérations DAO.
- * Permet de distinguer les erreurs DAO des autres exceptions de l'application.
+ * Exception technique de base pour toutes les erreurs liées aux opérations DAO (Base de données).
+ *
+ * <p>Permet d'encapsuler les {@link java.sql.SQLException} et d'y ajouter un contexte métier riche
+ * (Code d'erreur précis, type d'opération en échec, identifiant de l'entité concernée).
+ * Cette exception est destinée à être interceptée par l'ExceptionService global.
+ * </p>
  *
  * @author Julio FERMIN
- * @version 2.0
+ * @version 2.1
  * @since 15/01/2026
  */
 public class DaoException extends Exception {
@@ -15,45 +19,36 @@ public class DaoException extends Exception {
   private final Object entityId;
 
   /**
-   * Constructeur avec message simple.
+   * Constructeur principal et complet (Master Constructor).
+   * Tous les autres constructeurs délèguent à celui-ci (Principe DRY).
    */
-  public DaoException(String message) {
-    super(message);
-    this.errorCode = ErrorCode.GENERAL_ERROR;
-
-    this.operation = null;
-    this.entityId = null;
-  }
-
-  /**
-   * Constructeur avec message et cause.
-   */
-  public DaoException(String message, Throwable cause) {
+  public DaoException(
+      ErrorCode errorCode, String operation, Object entityId, String message, Throwable cause) {
     super(message, cause);
-    this.errorCode = ErrorCode.GENERAL_ERROR;
-    this.operation = null;
-    this.entityId = null;
-  }
-
-  /**
-   * Constructeur complet avec code d'erreur, opération et ID de l'entité.
-   */
-  public DaoException(ErrorCode errorCode, String operation,
-                      Object entityId, String message, Throwable cause) {
-    super(message, cause);
-    this.errorCode = errorCode;
+    this.errorCode = errorCode != null ? errorCode : ErrorCode.GENERAL_ERROR;
     this.operation = operation;
     this.entityId = entityId;
   }
 
   /**
-   * Constructeur complet sans cause.
+   * Constructeur complet sans cause (quand l'erreur est purement logique au niveau DAO).
    */
   public DaoException(ErrorCode errorCode, String operation, Object entityId, String message) {
-    super(message);
-    this.errorCode = errorCode;
-    this.operation = operation;
-    this.entityId = entityId;
+    this(errorCode, operation, entityId, message, null);
+  }
+
+  /**
+   * Constructeur avec message et cause technique (ex : SQLException).
+   */
+  public DaoException(String message, Throwable cause) {
+    this(ErrorCode.GENERAL_ERROR, null, null, message, cause);
+  }
+
+  /**
+   * Constructeur simple pour une erreur générique.
+   */
+  public DaoException(String message) {
+    this(ErrorCode.GENERAL_ERROR, null, null, message, null);
   }
 
   public ErrorCode getErrorCode() {
@@ -70,46 +65,42 @@ public class DaoException extends Exception {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("DaoException{");
-    sb.append("errorCode=").append(errorCode);
-    if (operation != null) {
-      sb.append(", operation='").append(operation).append('\'');
-    }
-    if (entityId != null) {
-      sb.append(", entityId=").append(entityId);
-    }
-    sb.append(", message='").append(getMessage()).append('\'');
-    sb.append('}');
-    return sb.toString();
+    return String.format("DaoException{errorCode=%s, operation='%s', entityId=%s, message='%s'}",
+        errorCode, operation, entityId, getMessage());
   }
 
   /**
-   * Codes d'erreur pour catégoriser les erreurs DAO.
+   * Énumération des codes d'erreur pour une catégorisation précise des pannes DAO.
    */
   public enum ErrorCode {
-    // Erreurs de connexion
-    CONNECTION_ERROR("Erreur de connexion à la base de données"),
+    // Erreurs de connexion / Infrastructure
+    CONNECTION_ERROR("Impossible d'établir une connexion au serveur de base de données"),
 
     // Erreurs CRUD
-    CREATE_ERROR("Erreur lors de la création"),
-    READ_ERROR("Erreur lors de la lecture"),
-    UPDATE_ERROR("Erreur lors de la mise à jour"),
-    DELETE_ERROR("Erreur lors de la suppression"),
+    CREATE_ERROR("Échec de la transaction d'insertion en base de données"),
+    READ_ERROR("Échec de la récupération ou du mappage des données"),
+    UPDATE_ERROR("Échec de la mise à jour des données (aucune ligne affectée)"),
+    DELETE_ERROR("Échec de la suppression de l'enregistrement"),
 
-    // Erreurs de contraintes
-    FOREIGN_KEY_VIOLATION("Violation de contrainte de clé étrangère"),
-    UNIQUE_CONSTRAINT_VIOLATION("Violation de contrainte d'unicité"),
-    NOT_NULL_VIOLATION("Violation de contrainte NOT NULL"),
-    CHECK_CONSTRAINT_VIOLATION("Violation de contrainte CHECK"),
+    // Erreurs d'intégrité (Très utile pour le ExceptionService)
+    FOREIGN_KEY_VIOLATION(
+        "Action bloquée : cette donnée est liée à une autre entité via une clé étrangère"),
+    UNIQUE_CONSTRAINT_VIOLATION(
+        "Doublon détecté : une contrainte d'unicité (ex: email, raison sociale) "
+            + "n'est pas respectée"),
+    NOT_NULL_VIOLATION("Donnée manquante : une colonne obligatoire a reçu une valeur NULL"),
+    CHECK_CONSTRAINT_VIOLATION("Valeur rejetée : la donnée ne respecte pas "
+        + "les règles de contrôle (CHECK) de la table"),
 
-    // Erreurs métier
-    ENTITY_NOT_FOUND("Entité introuvable"),
-    INVALID_PARAMETER("Paramètre invalide"),
+    // Erreurs métier gérées au niveau DAO
+    ENTITY_NOT_FOUND("L'entité demandée n'existe pas ou a été supprimée"),
+    INVALID_PARAMETER("Les paramètres fournis au DAO sont invalides (ex: ID null)"),
 
     // Erreurs générales
-    TRANSACTION_ERROR("Erreur de transaction"),
-    GENERAL_ERROR("Erreur générale");
+    TRANSACTION_ERROR("La transaction SQL a échoué et un Rollback a été forcé"),
+    INTERNAL_ERROR("Une erreur interne inattendue s'est produite dans la couche "
+        + "d'accès aux données"),
+    GENERAL_ERROR("Erreur SQL non catégorisée");
 
     private final String description;
 
