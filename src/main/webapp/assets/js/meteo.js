@@ -27,7 +27,7 @@ const URL_OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
  * @returns {Promise<{lat: number, lon: number}|null>}
  */
 async function geocoderVille(ville) {
-    if (!ville || !ville.trim() === "") return null;
+    if (!ville || ville.trim() === "") return null;
 
     const params = new URLSearchParams({
         q: ville,
@@ -198,16 +198,21 @@ function afficherDonneesMeteo(meteo, ville) {
         })
         : "-";
 
-    // Injecter dans le DOM
-    document.getElementById("meteo-ville").textContent = ville;
-    document.getElementById("meteo-icone").textContent = infos.icone;
-    document.getElementById("meteo-description").textContent = infos.description;
-    document.getElementById("meteo-temperature").textContent = meteo.temperature_2m;
-    document.getElementById("meteo-vent").textContent = meteo.windspeed_10m;
-    document.getElementById("meteo-humidite").textContent = meteo.relative_humidity_2m;
-    document.getElementById("meteo-maj").textContent = heure;
+    // ✅ PROGRAMMATION DÉFENSIVE : L'opérateur '?.' empêche le script de planter si l'ID n'existe pas dans le HTML.
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
 
-    // Afficher le bloc données, masquer chargement + erreur
+    setValue("meteo-ville", ville);
+    setValue("meteo-icone", infos.icone);
+    setValue("meteo-description", infos.description);
+    setValue("meteo-temperature", meteo.temperature_2m);
+    setValue("meteo-vent", meteo.windspeed_10m);
+    setValue("meteo-humidite", meteo.relative_humidity_2m);
+    setValue("meteo-maj", heure);
+
+    // Afficher le bloc des données, masquer chargement + erreur
     afficherEtatDonnees();
 }
 
