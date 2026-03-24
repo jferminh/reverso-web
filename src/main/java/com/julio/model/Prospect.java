@@ -1,7 +1,5 @@
 package com.julio.model;
 
-import com.julio.exception.ValidationException;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import java.io.Serial;
@@ -15,26 +13,16 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Classe représentant un prospect dans le système de gestion.
+ * Entité représentant un Prospect dans le système CRM.
  *
- * <p>Un prospect est une société potentiellement intéressée par les services
- * de l'entreprise. Cette classe gère les informations spécifiques comme
- * la date de prospection et le niveau d'intérêt manifesté.
- * Les identifiants des prospects sont générés automatiquement via un compteur
- * statique incrémental.
+ * <p>Hérite des propriétés communes de la classe abstraite {@link Societe}.
+ * Cette classe utilise Lombok pour générer les accesseurs et un constructeur via
+ * le pattern Builder, tout en incluant explicitement les champs du parent dans
+ * les méthodes equals, hashCode et toString.
  * </p>
  *
- * <p>Contraintes métier :</p>
- * <ul>
- *   <li>La date de prospection est obligatoire</li>
- *   <li>Le niveau d'intérêt (intéressé) est obligatoire</li>
- * </ul>
- *
- * @author Julio FERMIN
- * @version 1.0
- * @since 19/11/2025
- * @see Societe
- * @see Interesse
+ * @author Julio
+ * @version 2.0
  */
 @Getter
 @Setter
@@ -44,16 +32,34 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true, of = {})
 @SuperBuilder
 public class Prospect extends Societe {
+
+  /**
+   * Identifiant de sérialisation pour la persistance de l'objet (ex : dans les sessions HTTP).
+   */
   @Serial
   private static final long serialVersionUID = 1L;
 
+  /**
+   * Date à laquelle le prospect a été contacté ou démarché.
+   * La validation garantit qu'elle ne peut pas être dans le futur.
+   */
   @NotNull(message = "La date de prospection est obligatoire.")
-  @PastOrPresent(message = "La date doit être dans le passé ou présent")
+  @PastOrPresent(message = "La date doit être dans le passé ou le présent.")
   private LocalDate dateProspection;
 
-  @NotBlank(message = "Intérêt est obligatoire")
+  /**
+   * Niveau d'intérêt du prospect.
+   * Utilise @NotNull car il s'agit d'un objet/enum, et non d'une chaîne de caractères.
+   */
+  @NotNull(message = "Le niveau d'intérêt est obligatoire.")
   private Interesse interesse;
 
+  /**
+   * Retourne le type concret de la société.
+   * Utile pour l'affichage dynamique ou la logique polymorphique.
+   *
+   * @return La chaîne de caractères "Prospect"
+   */
   @Override
   public String getTypeSociete() {
     return "Prospect";
