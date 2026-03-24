@@ -1,5 +1,6 @@
 package com.julio.controller;
 
+import com.julio.service.ExceptionService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,6 +20,9 @@ public class FrontControllerServlet extends HttpServlet {
   // 🗑️ SUPPRESSION : Plus besoin de la Map ici, ni de la méthode init() !
   // L'usine s'en occupe maintenant.
 
+  // Instanciation du service des exceptions (Stateless, donc une seule instance suffit)
+  private final ExceptionService exceptionService = new ExceptionService();
+
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
@@ -31,6 +35,9 @@ public class FrontControllerServlet extends HttpServlet {
     processRequest(request, response);
   }
 
+  /**
+   * Traitement centralisé des requêtes GET et POST.
+   */
   private void processRequest(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
@@ -54,10 +61,9 @@ public class FrontControllerServlet extends HttpServlet {
       }
 
     } catch (Exception e) {
-      log.error("Erreur critique lors de l'exécution de la commande '{}'", cmd, e);
-      // Redirection générique en cas de crash serveur (Erreur 500)
-      request.setAttribute("erreurMessage", "Une erreur interne est survenue sur le serveur.");
-      request.getRequestDispatcher("/WEB-INF/views/common/erreur.jsp").forward(request, response);
+      // Toute exception qui remonte est attrapée, analysée et traduite en 1 seule ligne !
+      String vueErreur = exceptionService.handleException(e, request);
+      request.getRequestDispatcher(vueErreur).forward(request, response);
     }
   }
 }
