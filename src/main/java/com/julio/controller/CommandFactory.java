@@ -9,6 +9,7 @@ import com.julio.controller.client.ViewClientCommand;
 import com.julio.controller.common.AccueilCommand;
 import com.julio.controller.common.LoginCommand;
 import com.julio.controller.common.LogoutCommand;
+import com.julio.controller.prospect.ListProspectsCommand;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,6 @@ public class CommandFactory {
     log.info("⚙️ Initialisation de la CommandFactory...");
 
     // --- Commandes Communes ---
-    // --- Commandes Communes ---
     commands.put("login", new LoginCommand());
     commands.put("logout", new LogoutCommand());
     commands.put("accueil", new AccueilCommand());
@@ -40,6 +40,9 @@ public class CommandFactory {
     commands.put("editClient", new EditClientCommand());
     commands.put("viewClient", new ViewClientCommand());
     commands.put("deleteClient", new DeleteClientCommand());
+
+    // --- Commandes Prospects ---
+    commands.put("listProspects", new ListProspectsCommand());
   }
 
   /**
