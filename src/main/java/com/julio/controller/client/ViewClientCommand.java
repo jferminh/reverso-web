@@ -2,50 +2,65 @@ package com.julio.controller.client;
 
 import com.julio.controller.Icommand;
 import com.julio.dao.ClientDao;
+import com.julio.exception.InvalidParameterException;
+import com.julio.exception.ResourceNotFoundException;
 import com.julio.model.Client;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Commande (GET) pour afficher la fiche détaillée d'un client.
+ * Commande permettant d'afficher la fiche détaillée d'un client spécifique.
+ *
+ * <p>Valide la présence de l'identifiant dans la requête GET et s'assure de l'existence
+ * du client en base de données avant de déléguer l'affichage à la vue JSP.
+ * </p>
+ *
+ * @author Julio
+ * @version 2.0
  */
 @Slf4j
 public class ViewClientCommand implements Icommand {
 
+  /**
+   * Exécute le chargement des détails d'un client.
+   *
+   * @param request  La requête HTTP contenant le paramètre 'id'.
+   * @param response La réponse HTTP.
+   * @return Le chemin vers la vue des détails (detail-client.jsp).
+   * @throws Exception Si l'ID est invalide ou si la base de données est inaccessible.
+   */
   @Override
-  public String execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  public String execute(HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     String idStr = request.getParameter("id");
 
+    // 1. Vérification de l'intégrité de la requête
     if (idStr == null || idStr.isBlank()) {
-      request.getSession().setAttribute("erreurMessage", "ID du client manquant.");
-      response.sendRedirect(request.getContextPath() + "/app?cmd=listClients");
-      return null;
+      throw new InvalidParameterException("ID du client manquant pour afficher la fiche.");
     }
 
     try {
       Integer id = Integer.parseInt(idStr);
       ClientDao clientDao = new ClientDao();
+
+      // 2. Récupération de l'entité complète
       Client client = clientDao.findById(id);
 
+      // 3. Gestion de la ressource non trouvée (404 logique)
       if (client == null) {
-        request.getSession().setAttribute("erreurMessage", "Ce client n'existe plus.");
-        response.sendRedirect(request.getContextPath() + "/app?cmd=listClients");
-        return null;
+        throw new ResourceNotFoundException("Ce client est introuvable ou a été supprimé.");
       }
 
-      // On transmet le client à la JSP
+      // 4. Préparation du contexte d'affichage
       request.setAttribute("client", client);
       request.setAttribute("pageTitle", client.getRaisonSociale() + " - Détails");
 
       return "/WEB-INF/views/client/detail-client.jsp";
 
-    } catch (Exception e) {
-      log.error("Erreur lors du chargement des détails du client ID={}", idStr, e);
-      request.getSession().setAttribute("erreurMessage",
-          "Erreur technique lors du chargement de la fiche.");
-      response.sendRedirect(request.getContextPath() + "/app?cmd=listClients");
-      return null;
+    } catch (NumberFormatException e) {
+      throw new InvalidParameterException("Format d'identifiant invalide.");
     }
+
   }
 }

@@ -51,7 +51,7 @@ public class CommandFactory {
   public static Icommand getCommand(String commandName) {
     // Sécurité : si aucune action n'est fournie, on renvoie vers l'accueil
     if (commandName == null || commandName.isBlank()) {
-      return commands.get("accueil");
+      return commands.get("login");
     }
 
     Icommand command = commands.get(commandName);
