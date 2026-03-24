@@ -1,142 +1,63 @@
 package com.julio.controller;
 
-import com.julio.controller.client.CreateClientCommand;
-import com.julio.controller.client.DeleteClientCommand;
-import com.julio.controller.client.EditClientCommand;
-import com.julio.controller.client.ListClientsCommand;
-import com.julio.controller.client.SaveClientCommand;
-import com.julio.controller.client.ViewClientCommand;
-import com.julio.controller.common.AccueilCommand;
-import com.julio.controller.common.LoginCommand;
-import com.julio.controller.common.LogoutCommand;
-import com.julio.dao.DatabaseConnexion;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import java.io.IOException;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Front Controller — unique servlet de l'application.
- * Toutes les requêtes passent par /app et sont dispatchées
- * vers une ICommand via une HashMap cmd → ICommand.
+ * Contrôleur frontal de l'application (Pattern MVC : Front Controller).
+ * Point d'entrée unique pour toutes les requêtes sécurisées "/app".
  */
 @Slf4j
-@WebServlet(urlPatterns = {"/app"})
+@WebServlet(name = "FrontController", urlPatterns = {"/app"})
 public class FrontControllerServlet extends HttpServlet {
 
-  private static final String VUE_ERREUR = "/WEB-INF/views/common/erreur.jsp";
-
-  private Map<String, Icommand> commands;
-
-  @Override
-  public void init() {
-    commands = new HashMap<>();
-
-    // 1) Commandes par défaut (accueil et authentification)
-    commands.put(null, new LoginCommand());
-    commands.put("accueil", new AccueilCommand());
-    commands.put("login", new LoginCommand());
-    commands.put("logout", new LogoutCommand());
-
-    // 2) Commandes Clients
-    commands.put("listClients", new ListClientsCommand());
-    commands.put("createClient", new CreateClientCommand());
-    commands.put("saveClient", new SaveClientCommand());
-    commands.put("deleteClient", new DeleteClientCommand());
-    commands.put("editClient", new EditClientCommand());
-    commands.put("viewClient", new ViewClientCommand());
-
-    // Bean Validation : Validator global
-    try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-      Validator validator = factory.getValidator();
-      getServletContext().setAttribute("validator", validator);
-    }
-
-    log.info("Front Controller initialisé avec succès");
-  }
+  // 🗑️ SUPPRESSION : Plus besoin de la Map ici, ni de la méthode init() !
+  // L'usine s'en occupe maintenant.
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
+      throws ServletException, IOException {
     processRequest(request, response);
   }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
+      throws ServletException, IOException {
     processRequest(request, response);
   }
 
   private void processRequest(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
+      throws ServletException, IOException {
 
     // ✅ OPTIMISATION : Encodage défini une seule fois ici
     request.setCharacterEncoding("UTF-8");
     response.setCharacterEncoding("UTF-8");
 
+    // 1. On lit ce que l'utilisateur veut faire
     String cmd = request.getParameter("cmd");
-    Icommand command = commands.get(cmd);
-    String vue;
 
-    if (command == null) {
-      log.warn("Commande inconnue reçue - cmd='{}', fallback vers accueil", cmd);
-      command = commands.get("accueil");
-    } else {
-      log.debug("Dispatch - cmd='{}' vers {}", cmd, command.getClass().getSimpleName());
-    }
+    // 2. 🪄 PATTERN FACTORY : On demande à l'usine la bonne commande
+    Icommand command = CommandFactory.getCommand(cmd);
 
     try {
-      vue = command.execute(request, response);
-    } catch (Exception ex) {
-      log.error("Erreur lors de l'exécution de la commande cmd='{}'", cmd, ex);
-      request.setAttribute("erreurMessage", "Une erreur interne est survenue.");
-      vue = VUE_ERREUR;
-    }
+      // 3. On exécute la commande (Polymorphisme)
+      String vue = command.execute(request, response);
 
-    if (vue != null && !response.isCommitted()) {
-      try {
+      // 4. On redirige vers la vue JSP (si la commande n'a pas déjà fait un sendRedirect)
+      if (vue != null) {
         request.getRequestDispatcher(vue).forward(request, response);
-      } catch (ServletException | IOException ex) {
-        log.error("Erreur lors du forward vers '{}'", vue, ex);
       }
-    }
-  }
 
-  @Override
-  public void destroy() {
-    log.info("FrontController détruit — libération des ressources");
-
-    // ✅ CORRECTION CRITIQUE : Fermer le pool HikariCP d'abord !
-    try {
-      DatabaseConnexion.getInstance().closePool();
     } catch (Exception e) {
-      log.error("Erreur lors de la fermeture du pool de connexions", e);
-    }
-
-    // Libération du driver MySQL (bonne pratique pour Tomcat)
-    try {
-      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
-      Enumeration<Driver> drivers = DriverManager.getDrivers();
-      while (drivers.hasMoreElements()) {
-        Driver driver = drivers.nextElement();
-        if (driver.getClass().getName().equals("com.mysql.cj.jdbc.Driver")) {
-          DriverManager.deregisterDriver(driver);
-          log.info("Driver JDBC deregistered : {}", driver);
-        }
-      }
-    } catch (Exception ex) {
-      log.error("Erreur lors de la libération du driver MySQL", ex);
+      log.error("Erreur critique lors de l'exécution de la commande '{}'", cmd, e);
+      // Redirection générique en cas de crash serveur (Erreur 500)
+      request.setAttribute("erreurMessage", "Une erreur interne est survenue sur le serveur.");
+      request.getRequestDispatcher("/WEB-INF/views/common/erreur.jsp").forward(request, response);
     }
   }
 }

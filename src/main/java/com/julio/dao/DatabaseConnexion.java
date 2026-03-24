@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Classe Singleton pour gérer le pool de connexions à la base de données MySQL.
- * <p>
- * Utilise le pattern "Double-Checked Locking" pour des performances maximales
+ *
+ * <p>Utilise le pattern "Double-Checked Locking" pour des performances maximales
  * en environnement multithread (Tomcat).
  *
  * @author Julio FERMIN
