@@ -1,7 +1,6 @@
 package com.julio.controller.prospect;
 
 import com.julio.dao.ProspectDao;
-import com.julio.exception.InvalidParameterException;
 import com.julio.exception.ResourceNotFoundException;
 import com.julio.model.Prospect;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,24 +33,12 @@ public class EditProspectCommand extends AbstractProspectCommand {
       throws Exception {
 
     // 1. Sécurité
-    if (!"GET".equalsIgnoreCase(request.getMethod())) {
-      response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée");
+    if (!isGetMethodValid(request, response)) {
       return null;
     }
 
     // 2. Extraction et validation de l'ID
-    String idStr = request.getParameter("id");
-    if (idStr == null || idStr.isBlank()) {
-      throw new InvalidParameterException("L'identifiant du prospect est manquant dans l'URL.");
-    }
-
-    int id;
-    try {
-      id = Integer.parseInt(idStr);
-    } catch (NumberFormatException e) {
-      log.warn("Tentative d'accès avec un ID prospect mal formaté : {}", idStr);
-      throw new InvalidParameterException("Le format de l'identifiant est invalide.");
-    }
+    int id = validerEtExtraireId(request, "prospect");
 
     log.info("Chargement des données pour l'édition du prospect ID={}", id);
 

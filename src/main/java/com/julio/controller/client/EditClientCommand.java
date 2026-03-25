@@ -1,7 +1,6 @@
 package com.julio.controller.client;
 
 import com.julio.dao.ClientDao;
-import com.julio.exception.InvalidParameterException;
 import com.julio.exception.ResourceNotFoundException;
 import com.julio.model.Client;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,25 +32,13 @@ public class EditClientCommand extends AbstractClientCommand {
   public String execute(HttpServletRequest request, HttpServletResponse response)
       throws Exception {
 
-    // 1. Sécurité : On s'assure que c'est une requête GET
-    if (!"GET".equalsIgnoreCase(request.getMethod())) {
-      response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée");
+    // 1. Validation de la méthode HTTP (DRY)
+    if (!isGetMethodValid(request, response)) {
       return null;
     }
 
-    // 2. Extraction et validation de l'ID
-    String idStr = request.getParameter("id");
-    if (idStr == null || idStr.isBlank()) {
-      throw new InvalidParameterException("L'identifiant du client est manquant dans l'URL.");
-    }
-
-    int id;
-    try {
-      id = Integer.parseInt(idStr);
-    } catch (NumberFormatException e) {
-      log.warn("Tentative d'accès avec un ID client mal formaté : {}", idStr);
-      throw new InvalidParameterException("Le format de l'identifiant est invalide.");
-    }
+    // 2. Extraction sécurisée de l'ID (DRY)
+    int id = validerEtExtraireId(request, "client");
 
     log.info("Chargement des données pour l'édition du client ID={}", id);
 

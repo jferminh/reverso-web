@@ -1,6 +1,5 @@
 package com.julio.controller.prospect;
 
-import com.julio.controller.Icommand;
 import com.julio.controller.common.AbstractSocieteCommand;
 import com.julio.exception.InvalidParameterException;
 import com.julio.model.Adresse;
