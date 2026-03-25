@@ -10,6 +10,7 @@ import com.julio.controller.common.AccueilCommand;
 import com.julio.controller.common.LoginCommand;
 import com.julio.controller.common.LogoutCommand;
 import com.julio.controller.prospect.CreateProspectCommand;
+import com.julio.controller.prospect.EditProspectCommand;
 import com.julio.controller.prospect.ListProspectsCommand;
 import com.julio.controller.prospect.SaveProspectCommand;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ public class CommandFactory {
     commands.put("listProspects", new ListProspectsCommand());
     commands.put("createProspect", new CreateProspectCommand());
     commands.put("saveProspect", new SaveProspectCommand());
+    commands.put("editProspect", new EditProspectCommand());
   }
 
   /**

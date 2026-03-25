@@ -1,6 +1,5 @@
 package com.julio.controller.client;
 
-import com.julio.controller.Icommand;
 import com.julio.dao.ClientDao;
 import com.julio.exception.InvalidParameterException;
 import com.julio.exception.ResourceNotFoundException;
@@ -10,73 +9,70 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Commande (GET) permettant de charger les données d'un client existant
- * et de préremplir dans le formulaire de modification.
+ * Commande (GET) chargée de préparer le formulaire de modification d'un client.
  *
- * <p>Les erreurs de paramètres (ID manquant, format invalide) ou d'absence de données (404)
- * lèvent des exceptions métier qui sont interceptées et traduites par le ExceptionService.
- * Les exceptions techniques (DaoException) remontent également de manière transparente.
+ * <p>Elle récupère l'identifiant depuis la requête HTTP, extrait le client correspondant
+ * depuis la base de données, et l'injecte dans le contexte pour le Data-Binding JSP.
  * </p>
  *
  * @author Julio
  * @version 2.0
  */
 @Slf4j
-public class EditClientCommand implements Icommand {
+public class EditClientCommand extends AbstractClientCommand {
 
   /**
    * Exécute la préparation du formulaire d'édition.
    *
-   * @param request  La requête HTTP contenant le paramètre 'id'.
-   * @param response La réponse HTTP.
-   * @return Le chemin vers la vue du formulaire (form-client.jsp).
-   * @throws Exception Si l'ID est invalide, le client introuvable, ou en cas d'erreur BDD.
+   * @param request  La requête HTTP entrante contenant l'ID du client.
+   * @param response La réponse HTTP sortante.
+   * @return Le chemin de la vue JSP du formulaire ({@link #VUE_FORM}).
+   * @throws Exception Si les paramètres sont invalides ou si le client est introuvable.
    */
   @Override
   public String execute(HttpServletRequest request, HttpServletResponse response)
       throws Exception {
 
-    // 1. Sécurité : Vérification de la méthode HTTP
+    // 1. Sécurité : On s'assure que c'est une requête GET
     if (!"GET".equalsIgnoreCase(request.getMethod())) {
       response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée");
       return null;
     }
 
+    // 2. Extraction et validation de l'ID
     String idStr = request.getParameter("id");
-
-    // 2. Validation de la présence de l'identifiant
-    // (Lève une exception gérée par ExceptionService)
     if (idStr == null || idStr.isBlank()) {
-      throw new InvalidParameterException(
-          "L'identifiant du client est manquant pour la modification.");
+      throw new InvalidParameterException("L'identifiant du client est manquant dans l'URL.");
     }
 
-    Integer id;
+    int id;
     try {
       id = Integer.parseInt(idStr);
     } catch (NumberFormatException e) {
-      throw new InvalidParameterException("Le format de l'identifiant client est invalide.");
+      log.warn("Tentative d'accès avec un ID client mal formaté : {}", idStr);
+      throw new InvalidParameterException("Le format de l'identifiant est invalide.");
     }
 
-    log.info("Chargement du client ID={} pour modification", id);
+    log.info("Chargement des données pour l'édition du client ID={}", id);
 
-    // 3. Appel au DAO (les DaoException remontent automatiquement)
+    // 3. Récupération des données via le DAO
     ClientDao clientDao = new ClientDao();
     Client client = clientDao.findById(id);
 
-    // 4. Vérification de l'existence de la ressource
+    // 4. Validation métier : Le client existe-t-il vraiment ?
     if (client == null) {
+      log.warn("Aucun client trouvé en base pour l'ID={}", id);
       throw new ResourceNotFoundException(
-          "Le client que vous essayez de modifier n'existe plus en base de données.");
+          "Le client que vous souhaitez modifier n'existe pas ou a été supprimé.");
     }
 
-    // 5. Data-Binding : on place le client dans la requête pour que le JSP s'auto-remplisse
+    // 5. Préparation du contexte pour la vue JSP
     request.setAttribute("client", client);
-
-    // 6. Configuration des métadonnées de la page pour le mode Édition
     request.setAttribute("modeEdit", true);
-    request.setAttribute("pageTitle", "Modifier " + client.getRaisonSociale() + " - Reverso CRM");
+    request.setAttribute("pageTitle", "Modifier " + client.getRaisonSociale()
+        + " - Reverso CRM");
 
-    return "/WEB-INF/views/client/form-client.jsp";
+    // Retourne la constante définie dans AbstractClientCommand
+    return VUE_FORM;
   }
 }
