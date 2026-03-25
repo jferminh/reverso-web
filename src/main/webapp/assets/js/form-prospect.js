@@ -6,11 +6,6 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("form-prospect");
-    if (!form) return;
-
-    // IMPORTANT : Clé unique pour que le brouillon Client n'écrase pas le brouillon Prospect !
-    const CLE_BROUILLON = "crm-brouillon-prospect";
 
     // Dictionnaire des messages d'erreur spécifiques au modèle Prospect
     const messagesErreur = {
@@ -51,40 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
         },
     };
 
-    // ── 1. Initialisation de la Validation RGAA ──
-    if (typeof brancherValidation === "function") {
-        brancherValidation(messagesErreur);
-    }
-
-    // ── 2. Initialisation du Brouillon (Éco-conception & UX) ──
-    if (typeof brancherBoutonBrouillon === "function") {
-        brancherBoutonBrouillon("btn-brouillon", form, CLE_BROUILLON);
-    }
-    if (typeof brancherAutoSauvegarde === "function") {
-        brancherAutoSauvegarde(form, CLE_BROUILLON);
-    }
-    if (typeof restaurerAvecEtatVisuel === "function") {
-        restaurerAvecEtatVisuel(form, messagesErreur, CLE_BROUILLON);
-    }
-    if (typeof brancherBoutonAnnuler === "function") {
-        brancherBoutonAnnuler("btn-annuler", CLE_BROUILLON);
-    }
-
-    // ── 3. Initialisation de la Soumission Sécurisée ──
-    if (typeof brancherSoumission === "function") {
-        brancherSoumission(form, messagesErreur, CLE_BROUILLON);
-    }
-
-    // ── 4. Initialisation de l'API Adresse (Gouv.fr) ──
-    if (typeof brancherGeoAdresse === "function") {
-        brancherGeoAdresse({
-            idNumero: "numero-rue",
-            idRue: "rue",
-            idCp: "code-postal",
-            idVille: "ville",
-            idBtnGeo: "btn-geo",
-            idSuggestions: "suggestion-adresse",
-            messagesErreur: messagesErreur,
-        });
-    }
+    // Appel de l'orchestrateur générique (DRY)
+    initialiserFormulaire({
+        idForm: "form-prospect",
+        cleBrouillon: "crm-brouillon-prospect",
+        messagesErreur: messagesErreur
+    });
 });

@@ -190,3 +190,57 @@ function brancherSoumission(form, messagesErreur, CLE_BROUILLON) {
         // Le navigateur prend le relai et exécute la requête HTTP POST !
     });
 }
+
+// =========================================================================
+// ORCHESTRATEUR GÉNÉRIQUE (DRY)
+// =========================================================================
+
+/**
+ * Initialise n'importe quel formulaire CRM en branchant tous les modules
+ * (Validation, Brouillon, Soumission, Geo-Adresse).
+ * * @param {Object} config - Configuration spécifique du formulaire.
+ * @param {string} config.idForm - L'ID HTML de la balise <form>.
+ * @param {string} config.cleBrouillon - La clé LocalStorage unique (ex: "brouillon-client").
+ * @param {Object} config.messagesErreur - Le dictionnaire des messages de validation.
+ */
+function initialiserFormulaire(config) {
+    const form = document.getElementById(config.idForm);
+    if (!form) return;
+
+    // 1. Validation visuelle
+    if (typeof brancherValidation === "function") {
+        brancherValidation(config.messagesErreur);
+    }
+
+    // 2. Gestion du Brouillon (LocalStorage)
+    if (typeof brancherBoutonBrouillon === "function") {
+        brancherBoutonBrouillon("btn-brouillon", form, config.cleBrouillon);
+    }
+    if (typeof brancherAutoSauvegarde === "function") {
+        brancherAutoSauvegarde(form, config.cleBrouillon);
+    }
+    if (typeof restaurerAvecEtatVisuel === "function") {
+        restaurerAvecEtatVisuel(form, config.messagesErreur, config.cleBrouillon);
+    }
+    if (typeof brancherBoutonAnnuler === "function") {
+        brancherBoutonAnnuler("btn-annuler", config.cleBrouillon);
+    }
+
+    // 3. Soumission
+    if (typeof brancherSoumission === "function") {
+        brancherSoumission(form, config.messagesErreur, config.cleBrouillon);
+    }
+
+    // 4. API Adresse (Les IDs d'adresse sont identiques entre Client et Prospect)
+    if (typeof brancherGeoAdresse === "function") {
+        brancherGeoAdresse({
+            idNumero: "numero-rue",
+            idRue: "rue",
+            idCp: "code-postal",
+            idVille: "ville",
+            idBtnGeo: "btn-geo",
+            idSuggestions: "suggestion-adresse",
+            messagesErreur: config.messagesErreur,
+        });
+    }
+}

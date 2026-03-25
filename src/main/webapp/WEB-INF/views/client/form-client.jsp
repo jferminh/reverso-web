@@ -45,7 +45,7 @@
                 <%-- TECH: aria-describedby lie l'input à son message d'erreur pour les lecteurs d'écran --%>
                 <input type="text" class="form-control" id="raison-sociale" name="raisonSociale"
                        value="<c:out value='${client.raisonSociale}'/>" placeholder="Ex : ACME Corporation"
-                       required aria-required="true" aria-describedby="raison-sociale-erreur">
+                       required aria-required="true" minlength="2" aria-describedby="raison-sociale-erreur">
                 <div id="raison-sociale-erreur" class="invalid-feedback" hidden>La raison sociale est obligatoire.</div>
             </div>
 

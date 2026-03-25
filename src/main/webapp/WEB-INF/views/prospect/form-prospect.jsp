@@ -43,7 +43,7 @@
                     <label for="raison-sociale" class="form-label">Raison sociale <span class="text-danger" aria-hidden="true">*</span></label>
                     <input type="text" class="form-control" id="raison-sociale" name="raisonSociale"
                            value="<c:out value='${prospect.raisonSociale}'/>" placeholder="Ex : Green Corp"
-                           required aria-required="true" aria-describedby="raison-sociale-erreur">
+                           required aria-required="true" minlength="2" aria-describedby="raison-sociale-erreur">
                     <div id="raison-sociale-erreur" class="invalid-feedback" hidden>La raison sociale est obligatoire.</div>
                 </div>
 
