@@ -1,6 +1,7 @@
 package com.julio.controller.prospect;
 
 import com.julio.controller.Icommand;
+import com.julio.controller.common.AbstractSocieteCommand;
 import com.julio.exception.InvalidParameterException;
 import com.julio.model.Adresse;
 import com.julio.model.Interesse;
@@ -11,17 +12,14 @@ import java.time.format.DateTimeParseException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Classe parente (abstraite) pour les commandes liées à l'entité {@link Prospect}.
- *
- * <p>Applique le principe DRY (Don't Repeat Yourself) en centralisant la logique
- * de récupération, de nettoyage et de conversion des paramètres HTTP.
- * </p>
+ * Classe parente (abstraite) pour les commandes liées à l'entité Prospect.
+ * Hérite de AbstractSocieteCommand pour l'extraction des données communes.
  *
  * @author Julio
- * @version 2.0
+ * @version 3.0
  */
 @Slf4j
-public abstract class AbstractProspectCommand implements Icommand {
+public abstract class AbstractProspectCommand extends AbstractSocieteCommand {
 
   protected static final String VUE_FORM = "/WEB-INF/views/prospect/form-prospect.jsp";
 
@@ -35,35 +33,13 @@ public abstract class AbstractProspectCommand implements Icommand {
   protected Prospect construireProspect(HttpServletRequest request)
       throws InvalidParameterException {
 
-    // 1. Récupération des clés primaires
-    String idStr = request.getParameter("id");
-    String idAdresseStr = request.getParameter("idAdresse");
+    // 1. Instanciation
+    Prospect prospect = new Prospect();
 
-    Integer idProspect = (idStr != null && !idStr.isBlank())
-        ? Integer.parseInt(idStr) : null;
-    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank())
-        ? Integer.parseInt(idAdresseStr) : null;
+    // 2. Remplissage des champs communs (Societe + Adresse)
+    hydraterSociete(request, prospect);
 
-    // 2. Construction de l'Adresse
-    Adresse adresse = Adresse.builder()
-        .numeroRue(request.getParameter("numeroRue"))
-        .nomRue(request.getParameter("nomRue"))
-        .codePostal(request.getParameter("codePostal"))
-        .ville(request.getParameter("ville"))
-        .build();
-    adresse.setId(idAdresse);
-
-    // 3. Construction de base du Prospect
-    Prospect prospect = Prospect.builder()
-        .raisonSociale(request.getParameter("raisonSociale"))
-        .adresse(adresse)
-        .telephone(request.getParameter("telephone"))
-        .email(request.getParameter("email"))
-        .commentaires(request.getParameter("commentaires"))
-        .build();
-    prospect.setId(idProspect);
-
-    // 4. Conversions spécifiques avec la bonne exception concrète
+    // 3. Conversions spécifiques au Prospect
     String dateStr = request.getParameter("dateProspection");
     if (dateStr != null && !dateStr.isBlank()) {
       try {

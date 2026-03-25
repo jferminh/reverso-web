@@ -1,6 +1,7 @@
 package com.julio.controller.client;
 
 import com.julio.controller.Icommand;
+import com.julio.controller.common.AbstractSocieteCommand;
 import com.julio.exception.InvalidParameterException;
 import com.julio.model.Adresse;
 import com.julio.model.Client;
@@ -9,13 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Classe parente pour les commandes liées aux Clients.
- * Centralise la récupération et le nettoyage des données du formulaire (Principe DRY).
+ * Hérite de AbstractSocieteCommand pour réutiliser la logique d'extraction commune.
  *
  * @author Julio
- * @version 2.0
+ * @version 3.0
  */
 @Slf4j
-public abstract class AbstractClientCommand implements Icommand {
+public abstract class AbstractClientCommand extends AbstractSocieteCommand {
 
   protected static final String VUE_FORM   = "/WEB-INF/views/client/form-client.jsp";
   protected static final String VUE_ERREUR = "/WEB-INF/views/common/erreur.jsp";
@@ -24,36 +25,18 @@ public abstract class AbstractClientCommand implements Icommand {
    * Construit un Client depuis les paramètres POST.
    *
    * @param request La requête HTTP contenant les données du formulaire
-   * @return Un objet Client hydraté (avec son Adresse)
+   * @return Un objet Client hydraté complet
    * @throws InvalidParameterException Si les paramètres numériques sont invalides
    */
   protected Client construireClient(HttpServletRequest request) throws InvalidParameterException {
 
-    String idStr = request.getParameter("id");
-    String idAdresseStr = request.getParameter("idAdresse");
+    // 1. Instanciation d'un client vide
+    Client client = new Client();
 
-    Integer idClient = (idStr != null && !idStr.isBlank()) ? Integer.parseInt(idStr) : null;
-    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank())
-        ? Integer.parseInt(idAdresseStr) : null;
+    // 2. MAGIE DU DRY : On laisse la classe mère remplir les 80% des champs communs !
+    hydraterSociete(request, client);
 
-    Adresse adresse = Adresse.builder()
-        .numeroRue(request.getParameter("numeroRue"))
-        .nomRue(request.getParameter("nomRue"))
-        .codePostal(request.getParameter("codePostal"))
-        .ville(request.getParameter("ville"))
-        .build();
-    adresse.setId(idAdresse);
-
-    Client client = Client.builder()
-        .raisonSociale(request.getParameter("raisonSociale"))
-        .adresse(adresse)
-        .telephone(request.getParameter("telephone"))
-        .email(request.getParameter("email"))
-        .commentaires(request.getParameter("commentaires"))
-        .build();
-    client.setId(idClient);
-
-    // Sécurisation du parsing numérique
+    // 3. Traitement exclusif aux Clients (Sécurisation du parsing numérique)
     String caStr = request.getParameter("chiffreAffaires");
     String nbStr = request.getParameter("nbEmployes");
 
