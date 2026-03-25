@@ -10,57 +10,68 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Commande permettant d'afficher la fiche détaillée d'un client spécifique.
- *
- * <p>Valide la présence de l'identifiant dans la requête GET et s'assure de l'existence
- * du client en base de données avant de déléguer l'affichage à la vue JSP.
+ * Commande (GET) chargée d'afficher la vue détaillée d'un client (Mode lecture seule).
+ * <p>
+ * Récupère l'identifiant depuis la requête HTTP, extrait le client complet
+ * depuis la base de données, et l'injecte dans le contexte pour l'affichage (Météo, Carte).
  * </p>
  *
  * @author Julio
- * @version 2.0
+ * @version 1.0
  */
 @Slf4j
 public class ViewClientCommand implements Icommand {
 
+  private static final String VUE_DETAIL = "/WEB-INF/views/client/detail-client.jsp";
+
   /**
-   * Exécute le chargement des détails d'un client.
+   * Exécute le chargement des détails du client.
    *
-   * @param request  La requête HTTP contenant le paramètre 'id'.
-   * @param response La réponse HTTP.
-   * @return Le chemin vers la vue des détails (detail-client.jsp).
-   * @throws Exception Si l'ID est invalide ou si la base de données est inaccessible.
+   * @param request  La requête HTTP entrante contenant l'ID du client.
+   * @param response La réponse HTTP sortante.
+   * @return Le chemin de la vue JSP des détails ({@link #VUE_DETAIL}).
+   * @throws Exception Si les paramètres sont invalides ou si le client est introuvable.
    */
   @Override
   public String execute(HttpServletRequest request, HttpServletResponse response)
       throws Exception {
+
+    // 1. Sécurité (Verbe HTTP)
+    if (!"GET".equalsIgnoreCase(request.getMethod())) {
+      response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée");
+      return null;
+    }
+
+    // 2. Extraction et validation de l'ID
     String idStr = request.getParameter("id");
-
-    // 1. Vérification de l'intégrité de la requête
     if (idStr == null || idStr.isBlank()) {
-      throw new InvalidParameterException("ID du client manquant pour afficher la fiche.");
+      throw new InvalidParameterException("L'identifiant du client est manquant dans l'URL.");
     }
 
+    int id;
     try {
-      Integer id = Integer.parseInt(idStr);
-      ClientDao clientDao = new ClientDao();
-
-      // 2. Récupération de l'entité complète
-      Client client = clientDao.findById(id);
-
-      // 3. Gestion de la ressource non trouvée (404 logique)
-      if (client == null) {
-        throw new ResourceNotFoundException("Ce client est introuvable ou a été supprimé.");
-      }
-
-      // 4. Préparation du contexte d'affichage
-      request.setAttribute("client", client);
-      request.setAttribute("pageTitle", client.getRaisonSociale() + " - Détails");
-
-      return "/WEB-INF/views/client/detail-client.jsp";
-
+      id = Integer.parseInt(idStr);
     } catch (NumberFormatException e) {
-      throw new InvalidParameterException("Format d'identifiant invalide.");
+      log.warn("Tentative de consultation avec un ID client mal formaté : {}", idStr);
+      throw new InvalidParameterException("Le format de l'identifiant est invalide.");
     }
 
+    log.info("Consultation des détails du client ID={}", id);
+
+    // 3. Récupération des données via le DAO
+    ClientDao clientDao = new ClientDao();
+    Client client = clientDao.findById(id);
+
+    // 4. Validation métier
+    if (client == null) {
+      log.warn("Consultation échouée : Aucun client trouvé pour l'ID={}", id);
+      throw new ResourceNotFoundException("Le client que vous souhaitez consulter n'existe pas ou a été supprimé.");
+    }
+
+    // 5. Injection et Routage
+    request.setAttribute("client", client);
+    request.setAttribute("pageTitle", client.getRaisonSociale() + " - Détails");
+
+    return VUE_DETAIL;
   }
 }

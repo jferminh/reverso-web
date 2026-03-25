@@ -13,6 +13,7 @@ import com.julio.controller.prospect.CreateProspectCommand;
 import com.julio.controller.prospect.EditProspectCommand;
 import com.julio.controller.prospect.ListProspectsCommand;
 import com.julio.controller.prospect.SaveProspectCommand;
+import com.julio.controller.prospect.ViewProspectCommand;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,7 @@ public class CommandFactory {
     commands.put("createProspect", new CreateProspectCommand());
     commands.put("saveProspect", new SaveProspectCommand());
     commands.put("editProspect", new EditProspectCommand());
+    commands.put("viewProspect", new ViewProspectCommand());
   }
 
   /**
