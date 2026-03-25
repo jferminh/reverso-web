@@ -1,9 +1,7 @@
 package com.julio.controller.client;
 
-import com.julio.controller.Icommand;
 import com.julio.controller.common.AbstractSocieteCommand;
 import com.julio.exception.InvalidParameterException;
-import com.julio.model.Adresse;
 import com.julio.model.Client;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractClientCommand extends AbstractSocieteCommand {
 
   protected static final String VUE_FORM   = "/WEB-INF/views/client/form-client.jsp";
-  protected static final String VUE_ERREUR = "/WEB-INF/views/common/erreur.jsp";
 
   /**
    * Construit un Client depuis les paramètres POST.

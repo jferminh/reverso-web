@@ -5,11 +5,12 @@
  */
 document.addEventListener("DOMContentLoaded", async function () {
 
-    // 1. On récupère le conteneur principal
-    const mainElement = document.getElementById("detail-client");
+    // 💡 Astuce DRY : On cherche le conteneur du client OU du prospect
+    const mainElement = document.getElementById("detail-client") || document.getElementById("detail-prospect");
+    // const mainElement = document.getElementById("detail-client");
     if (!mainElement) return;
 
-    // 2. On lit les données que Java (JSTL) a glissé dans les attributs data-*
+    // 2. On lit les données que Java (JSTL) a glissées dans les attributs data-*
     const ville = mainElement.getAttribute("data-ville");
     const adresseComplete = mainElement.getAttribute("data-adresse");
     const nomEntite = mainElement.getAttribute("data-nom");
