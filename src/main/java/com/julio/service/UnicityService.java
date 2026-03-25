@@ -8,13 +8,15 @@ import com.julio.model.Prospect;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service de vérification de l'unicité des données métier.
+ * Service transverse (Métier) dédié à la vérification de l'unicité des données.
  *
- * <p>Ce service vérifie l'unicité de la raison sociale à travers
- * les tables Client et Prospect pour éviter les doublons dans le système.
+ * <p>Implémente le principe de Responsabilité Unique (SRP). Il garantit qu'aucune
+ * société (Client ou Prospect) ne puisse être créée avec une raison sociale
+ * déjà existante dans le système, évitant ainsi les collisions.
+ * </p>
  *
- * @author Julio FERMIN
- * @version 3.0 (Optimisé avec SLF4J et correction de collision d'ID)
+ * @author Julio
+ * @version 3.1
  */
 @Slf4j
 public class UnicityService {
@@ -23,86 +25,68 @@ public class UnicityService {
   private final ProspectDao prospectDao;
 
   /**
-   * Constructeur avec injection des DAO.
+   * Constructeur avec injection des dépendances (Pattern Dependency Injection).
    */
   public UnicityService(ClientDao clientDao, ProspectDao prospectDao) {
     if (clientDao == null || prospectDao == null) {
-      throw new IllegalArgumentException("Les DAO ne peuvent pas être null");
+      throw new IllegalArgumentException("Les DAO injectés ne peuvent pas être null");
     }
     this.clientDao = clientDao;
     this.prospectDao = prospectDao;
   }
 
   /**
-   * Vérifie si une raison sociale existe déjà (Idéal pour la CRÉATION).
+   * Vérifie l'unicité lors de la CRÉATION d'une nouvelle entité.
    *
-   * @param raisonSociale la raison sociale à vérifier
-   * @return true si un doublon existe, false sinon
-   * @throws DaoException si une erreur survient
+   * @param raisonSociale La raison sociale à vérifier.
+   * @return true si un doublon existe (chez les clients ou les prospects), false sinon.
+   * @throws DaoException En cas de problème d'accès à la base de données.
    */
   public boolean isRaisonSocialeDupliquee(String raisonSociale) throws DaoException {
     if (raisonSociale == null || raisonSociale.trim().isEmpty()) {
       throw new IllegalArgumentException("La raison sociale ne peut pas être null ou vide");
     }
-
-    try {
-      return (prospectDao.findByRaisonSociale(raisonSociale) != null)
-          || (clientDao.findByRaisonSociale(raisonSociale) != null);
-    } catch (DaoException e) {
-      log.error("Erreur lors de la vérification unicité raison sociale '{}'", raisonSociale, e);
-      throw e;
-    }
+    return (clientDao.findByRaisonSociale(raisonSociale) != null)
+        || (prospectDao.findByRaisonSociale(raisonSociale) != null);
   }
 
   /**
    * Vérifie l'unicité lors de la MODIFICATION d'un CLIENT.
    *
-   * @param raisonSociale la raison sociale à vérifier
-   * @param clientIdaExclure l'ID du client en cours de modification
-   * @return true si doublon, false sinon
+   * <p>OPTIMISATION : Seulement 2 requêtes SQL maximum exécutées.</p>
+   *
+   * @param raisonSociale La raison sociale soumise dans le formulaire.
+   * @param clientIdAExclure L'ID du client en cours de modification.
+   * @return true si un doublon est détecté, false si le nom est disponible.
+   * @throws DaoException En cas d'erreur de base de données.
    */
   public boolean isRaisonSocialeDupliqueePourClient(
-      String raisonSociale, Integer clientIdaExclure) throws DaoException {
-    if (isRaisonSocialeDupliquee(raisonSociale)) {
-      // Si on trouve un doublon, on vérifie si c'est EXACTEMENT le client qu'on modifie
-      Client clientExistant = clientDao.findByRaisonSociale(raisonSociale);
+      String raisonSociale, Integer clientIdAExclure) throws DaoException {
 
-      // S'il existe un client avec ce nom, et que ce n'est PAS le nôtre -> Doublon !
-      if (clientExistant != null && !clientExistant.getId().equals(clientIdaExclure)) {
-        return true;
-      }
-
-      // S'il existe un prospect avec ce nom -> Doublon direct !
-      // (Un prospect ne peut pas avoir l'ID d'un client)
-      Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
-      if (prospectExistant != null) {
-        return true;
-      }
+    // 1. Vérification côté Client
+    Client clientExistant = clientDao.findByRaisonSociale(raisonSociale);
+    if (clientExistant != null && !clientExistant.getId().equals(clientIdAExclure)) {
+      return true; // Un AUTRE client porte déjà ce nom
     }
-    return false;
+
+    // 2. Vérification côté Prospect (Un client ne peut jamais écraser le nom d'un prospect)
+    Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
+    return prospectExistant != null;
   }
 
   /**
    * Vérifie l'unicité lors de la MODIFICATION d'un PROSPECT.
-   *
-   * @param raisonSociale la raison sociale à vérifier
-   * @param prospectIdaExclure l'ID du prospect en cours de modification
-   * @return true si doublon, false sinon
    */
-  public boolean isRaisonSocialeDupliqueePourProspect(
-      String raisonSociale, Integer prospectIdaExclure) throws DaoException {
-    if (isRaisonSocialeDupliquee(raisonSociale)) {
+  public boolean isRaisonSocialeDupliqueePourProspect(String raisonSociale, Integer prospectIdAExclure) throws DaoException {
 
-      Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
-      if (prospectExistant != null && !prospectExistant.getId().equals(prospectIdaExclure)) {
-        return true;
-      }
-
-      Client clientExistant = clientDao.findByRaisonSociale(raisonSociale);
-      if (clientExistant != null) {
-        return true;
-      }
+    // 1. Vérification côté Prospect
+    Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
+    if (prospectExistant != null && !prospectExistant.getId().equals(prospectIdAExclure)) {
+      return true; // Un AUTRE prospect porte déjà ce nom
     }
-    return false;
+
+    // 2. Vérification côté Client
+    Client clientExistant = clientDao.findByRaisonSociale(raisonSociale);
+    return clientExistant != null;
   }
 }

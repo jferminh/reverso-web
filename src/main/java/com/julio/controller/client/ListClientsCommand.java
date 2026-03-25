@@ -36,7 +36,7 @@ public class ListClientsCommand implements Icommand {
       throws Exception {
 
     // ✅ DEBUG : début de l'exécution, utile pour tracer les flux en dev
-    log.info("Chargement de la liste clients...");
+    log.info("Chargement de la liste des clients...");
 
     // 1. Initialisation du DAO et récupération
     ClientDao clientDao = new ClientDao();

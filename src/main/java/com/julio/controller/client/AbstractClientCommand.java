@@ -33,7 +33,8 @@ public abstract class AbstractClientCommand implements Icommand {
     String idAdresseStr = request.getParameter("idAdresse");
 
     Integer idClient = (idStr != null && !idStr.isBlank()) ? Integer.parseInt(idStr) : null;
-    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank()) ? Integer.parseInt(idAdresseStr) : null;
+    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank()) ?
+        Integer.parseInt(idAdresseStr) : null;
 
     Adresse adresse = Adresse.builder()
         .numeroRue(request.getParameter("numeroRue"))
@@ -57,14 +58,17 @@ public abstract class AbstractClientCommand implements Icommand {
     String nbStr = request.getParameter("nbEmployes");
 
     try {
-      long ca = (caStr != null && !caStr.isBlank()) ? Long.parseLong(caStr.replaceAll("[^0-9]", "")) : 0L;
-      int nb = (nbStr != null && !nbStr.isBlank()) ? Integer.parseInt(nbStr.replaceAll("[^0-9]", "")) : 0;
+      long ca = (caStr != null && !caStr.isBlank()) ?
+          Long.parseLong(caStr.replaceAll("[^0-9]", "")) : 0L;
+      int nb = (nbStr != null && !nbStr.isBlank()) ?
+          Integer.parseInt(nbStr.replaceAll("[^0-9]", "")) : 0;
 
       client.setChiffreAffaires(ca);
       client.setNbEmployes(nb);
     } catch (NumberFormatException e) {
       log.warn("Données numériques invalides reçues. CA: {}, Employés: {}", caStr, nbStr);
-      throw new InvalidParameterException("Les valeurs du chiffre d'affaires ou du nombre d'employés sont invalides.");
+      throw new InvalidParameterException(
+          "Les valeurs du chiffre d'affaires ou du nombre d'employés sont invalides.");
     }
 
     return client;
