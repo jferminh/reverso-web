@@ -1,6 +1,6 @@
 package com.julio.model;
 
-import com.julio.exception.ValidationException;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
@@ -36,11 +36,12 @@ public class Client extends Societe {
   private static final long serialVersionUID = 1L;
 
   @NotNull(message = "Le chiffre d'affaires est obligatoire")
-  @Min(value = 200, message = "Le chiffre d'affaires doit être >= 200")
+  @DecimalMin(value = "200.0", inclusive = false,
+      message = "Le chiffre d'affaires doit être strictement supérieur à 200")
   private Long chiffreAffaires;
 
   @NotNull(message = "Le nombre d'employés est obligatoire")
-  @Min(value = 1, message = "Le nombre d'employés doit être >= 1")
+  @Min(value = 1, message = "Le nombre d'employés doit être strictement supérieur à zéro")
   private Integer nbEmployes;
 
   @Builder.Default

@@ -33,24 +33,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Prospect extends Societe {
 
-  /**
-   * Identifiant de sérialisation pour la persistance de l'objet (ex : dans les sessions HTTP).
-   */
   @Serial
   private static final long serialVersionUID = 1L;
 
-  /**
-   * Date à laquelle le prospect a été contacté ou démarché.
-   * La validation garantit qu'elle ne peut pas être dans le futur.
-   */
   @NotNull(message = "La date de prospection est obligatoire.")
   @PastOrPresent(message = "La date de prospection ne peut pas être dans le future.")
   private LocalDate dateProspection;
 
-  /**
-   * Niveau d'intérêt du prospect.
-   * Utilise @NotNull car il s'agit d'un objet/enum, et non d'une chaîne de caractères.
-   */
   @NotNull(message = "Le niveau d'intérêt est obligatoire.")
   private Interesse interesse;
 
