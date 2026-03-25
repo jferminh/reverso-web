@@ -1,8 +1,12 @@
 /**
- * utils-form.js
- * Fonctions génériques de validation partagées.
+ * @file utils-form.js
+ * @description Boîte à outils JS pour la validation Front-End et la gestion du cycle de vie des formulaires.
+ * @author Julio
  */
 
+/**
+ * Traduit l'état de validité natif d'un champ en un message personnalisé.
+ */
 function getMessageErreur(champ, messagesErreur) {
     const validite = champ.validity;
     const messages = messagesErreur[champ.id];
@@ -15,41 +19,64 @@ function getMessageErreur(champ, messagesErreur) {
     return champ.validationMessage;
 }
 
+/**
+ * Gère l'affichage visuel et l'accessibilité (RGAA) d'un champ en erreur.
+ */
 function afficherErreur(champ, messagesErreur) {
     const zoneErreur = document.getElementById(champ.id + "-erreur");
+
     if (champ.validity.valid) {
         champ.classList.remove("is-invalid");
         champ.classList.add("is-valid");
+        // RGAA : On retire l'état invalide pour le lecteur d'écran
         champ.removeAttribute("aria-invalid");
-        if (zoneErreur) { zoneErreur.textContent = ""; zoneErreur.hidden = true; }
+        if (zoneErreur) {
+            zoneErreur.textContent = "";
+            zoneErreur.hidden = true;
+        }
     } else {
         champ.classList.remove("is-valid");
         champ.classList.add("is-invalid");
+        // RGAA : On signale l'erreur au lecteur d'écran
         champ.setAttribute("aria-invalid", "true");
-        if (zoneErreur) { zoneErreur.textContent = getMessageErreur(champ, messagesErreur); zoneErreur.hidden = false; }
+        if (zoneErreur) {
+            zoneErreur.textContent = getMessageErreur(champ, messagesErreur);
+            zoneErreur.hidden = false;
+        }
     }
 }
 
+/**
+ * Connecte les écouteurs d'événements pour la validation en temps réel (Blur & Input).
+ */
 function brancherValidation(messagesErreur) {
     Object.keys(messagesErreur).forEach(id => {
         const champ = document.getElementById(id);
         if (!champ) return;
+
+        // On valide quand l'utilisateur quitte le champ
         champ.addEventListener("blur", () => afficherErreur(champ, messagesErreur));
+
+        // On valide en direct uniquement si le champ était déjà en erreur (pour un retour rapide)
         champ.addEventListener("input", () => {
             if (champ.classList.contains("is-invalid")) afficherErreur(champ, messagesErreur);
         });
     });
 }
 
-// ── Gestion Visuelle Brouillon ──
+// =========================================================================
+// GESTION DU CYCLE DE VIE (Brouillons & Soumission)
+// =========================================================================
+
 function mettreAJourBadgeBrouillon(statut) {
     const badge = document.querySelector("[data-badge-brouillon]");
     if (!badge) return;
+
     if (statut === "en-cours") {
-        badge.textContent = "📄 Sauvegarde…";
-        badge.className = "badge bg-light text-secondary border";
+        badge.textContent = "⏳ Sauvegarde…";
+        badge.className = "badge bg-warning text-dark border";
     } else if (statut === "sauvegarde") {
-        badge.textContent = "✅ Brouillon sauvegardé";
+        badge.textContent = "✅ Sauvegardé";
         badge.className = "badge bg-success text-white border";
         setTimeout(() => {
             badge.textContent = "📄 Brouillon auto";
@@ -61,13 +88,19 @@ function mettreAJourBadgeBrouillon(statut) {
 function brancherBoutonBrouillon(btnId, form, CLE_BROUILLON) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
+
     btn.addEventListener("click", () => {
         sauvegarderBrouillon(CLE_BROUILLON, lireFormulaire(form));
         afficherConfirmationBrouillon(btn);
     });
 }
 
+/**
+ * Active la sauvegarde automatique du formulaire.
+ * Implémente le pattern "Debouncing" pour l'éco-conception.
+ */
 function brancherAutoSauvegarde(form, CLE_BROUILLON) {
+    // 1. Sauvegarde régulière de sécurité toutes les 30s
     setInterval(() => {
         const donnees = lireFormulaire(form);
         const aucuneDonnee = Object.values(donnees).every(v => v === "" || v === false);
@@ -77,9 +110,16 @@ function brancherAutoSauvegarde(form, CLE_BROUILLON) {
         }
     }, 30000);
 
+    // 2. ÉCO-CONCEPTION (Debouncing) : On attend 1 seconde d'inactivité avant de sauvegarder.
+    // Cela évite de lancer 50 sauvegardes si l'utilisateur tape 50 lettres rapidement.
     form.addEventListener("input", () => {
         clearTimeout(form._debounceTimer);
-        form._debounceTimer = setTimeout(() => sauvegarderBrouillon(CLE_BROUILLON, lireFormulaire(form)), 1000);
+        mettreAJourBadgeBrouillon("en-cours");
+
+        form._debounceTimer = setTimeout(() => {
+            sauvegarderBrouillon(CLE_BROUILLON, lireFormulaire(form));
+            mettreAJourBadgeBrouillon("sauvegarde");
+        }, 1000);
     });
 }
 
@@ -89,52 +129,64 @@ function restaurerAvecEtatVisuel(form, messagesErreur, CLE_BROUILLON) {
 
     restaurerFormulaire(form, brouillonSauvegarde);
 
+    // Revalide visuellement les champs restaurés
     Object.keys(messagesErreur).forEach(id => {
         const champ = document.getElementById(id);
         if (champ && champ.value.trim() !== "") afficherErreur(champ, messagesErreur);
     });
-    afficherBanniereBrouillon(form, brouillonSauvegarde._sauvegardeLe || "heure inconnue");
+
+    afficherBanniereBrouillon(form, brouillonSauvegarde._sauvegardeLe || "inconnue");
 }
 
-// ── OPTIMISATION : Redirection Dynamique ──
 function brancherBoutonAnnuler(btnId, CLE_BROUILLON) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
 
     btn.addEventListener("click", (evenement) => {
         if (lireBrouillon(CLE_BROUILLON)) {
-            evenement.preventDefault(); // On bloque le clic temporairement
-            if (window.confirm("Vous avez un brouillon non soumis.\nVoulez-vous vraiment quitter sans enregistrer ?")) {
+            evenement.preventDefault();
+            if (window.confirm("Vous avez un brouillon en cours.\nVoulez-vous vraiment quitter sans enregistrer et perdre vos saisies ?")) {
                 effacerBrouillon(CLE_BROUILLON);
-                window.location.href = btn.href; // Redirige vers le lien natif du bouton JSP
+                window.location.href = btn.href;
             }
         }
     });
 }
 
-// ── 🚨 CORRECTION CRITIQUE : La Soumission ──
+/**
+ * Intercepte la soumission, valide tous les champs, et gère le focus RGAA.
+ */
 function brancherSoumission(form, messagesErreur, CLE_BROUILLON) {
     form.addEventListener("submit", (evenement) => {
         let formulaireValide = true;
         let premierChampInvalide = null;
 
+        // Validation intégrale de tous les champs suivis
         Object.keys(messagesErreur).forEach(id => {
             const champ = document.getElementById(id);
             if (!champ) return;
+
             afficherErreur(champ, messagesErreur);
+
             if (!champ.validity.valid) {
                 formulaireValide = false;
-                if (!premierChampInvalide) premierChampInvalide = champ;
+                if (!premierChampInvalide) premierChampInvalide = champ; // On garde le 1er en mémoire
             }
         });
 
+        // Comportement en cas d'échec
         if (!formulaireValide) {
-            evenement.preventDefault(); // ⛔ ON BLOQUE SEULEMENT SI ERREUR
-            if (premierChampInvalide) premierChampInvalide.focus();
+            evenement.preventDefault(); // ⛔ On bloque l'envoi au serveur
+
+            // RGAA : On force le curseur sur la première erreur pour assister l'utilisateur
+            if (premierChampInvalide) {
+                premierChampInvalide.focus();
+            }
             return;
         }
 
-        // ✅ TOUT EST VALIDE : On efface le brouillon et on laisse le navigateur envoyer le POST à Tomcat !
+        // ✅ TOUT EST VALIDE : On efface le brouillon (puisqu'on envoie en base)
         effacerBrouillon(CLE_BROUILLON);
+        // Le navigateur prend le relai et exécute la requête HTTP POST !
     });
 }
