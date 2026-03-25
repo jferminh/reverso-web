@@ -79,10 +79,10 @@
     </div>
 </div>
 
+<%-- MODALE DE SUPPRESSION SPÉCIFIQUE AU CLIENT --%>
 <div class="modal fade" id="modal-suppression" tabindex="-1" aria-labelledby="modal-suppression-titre" aria-modal="true" role="dialog">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <form action="${pageContext.request.contextPath}/app" method="POST">
                 <input type="hidden" name="cmd" value="deleteClient">
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
@@ -107,7 +107,6 @@
         </div>
     </div>
 </div>
-
 <script src="${pageContext.request.contextPath}/assets/js/modal.js"></script>
 
 <%@ include file="../common/footer.jsp" %>

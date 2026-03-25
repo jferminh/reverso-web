@@ -74,6 +74,25 @@ public abstract class AbstractSocieteCommand implements Icommand {
   }
 
   /**
+   * Vérifie que la requête HTTP utilise bien la méthode POST.
+   * Envoie automatiquement une erreur 405 (Method Not Allowed)
+   * au navigateur si ce n'est pas le cas.
+   *
+   * @param request La requête HTTP.
+   * @param response La réponse HTTP.
+   * @return true si la méthode est POST, false sinon.
+   * @throws Exception Si l'envoi de l'erreur échoue.
+   */
+  protected boolean isPostMethodValid(HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
+    if (!"POST".equalsIgnoreCase(request.getMethod())) {
+      response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée");
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Extrait et valide l'identifiant (ID) passé dans l'URL.
    *
    * @param request La requête HTTP.

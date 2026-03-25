@@ -82,7 +82,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form action="${pageContext.request.contextPath}/app" method="POST">
-                <input type="hidden" name="cmd" value="deleteProspect"> <%-- 👈 Pointe vers la commande Prospect --%>
+                <input type="hidden" name="cmd" value="deleteProspect">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="id" id="input-id-suppression">
 
                 <div class="modal-header">
