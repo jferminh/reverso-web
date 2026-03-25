@@ -39,7 +39,7 @@ public class CreateProspectCommand implements Icommand {
       return null;
     }
 
-    log.info("Ouverture du formulaire de création de prospect");
+    log.info("Affichage du formulaire de création de prospect");
 
     // 2. Préparation d'un objet vide pour le formulaire
     Prospect prospectVide = new Prospect();

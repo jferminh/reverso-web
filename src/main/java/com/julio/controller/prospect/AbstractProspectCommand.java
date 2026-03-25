@@ -29,10 +29,8 @@ public abstract class AbstractProspectCommand implements Icommand {
    * Extrait les données de la requête HTTP et construit une instance de Prospect hydratée.
    *
    * @param request La requête HTTP contenant les données soumises par l'utilisateur.
-   * @return Une instance de {@link Prospect} contenant les données saisies et
-   * son objet {@link Adresse} imbriqué.
-   * @throws InvalidParameterException Si les données complexes (Date, Enumération)
-   * sont corrompues.
+   * @return Une instance de {@link Prospect}son objet {@link Adresse} imbriqué.
+   * @throws InvalidParameterException Si (Date, Enumération) sont corrompues.
    */
   protected Prospect construireProspect(HttpServletRequest request)
       throws InvalidParameterException {
@@ -41,10 +39,10 @@ public abstract class AbstractProspectCommand implements Icommand {
     String idStr = request.getParameter("id");
     String idAdresseStr = request.getParameter("idAdresse");
 
-    Integer idProspect = (idStr != null && !idStr.isBlank()) ?
-        Integer.parseInt(idStr) : null;
-    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank()) ?
-        Integer.parseInt(idAdresseStr) : null;
+    Integer idProspect = (idStr != null && !idStr.isBlank())
+        ? Integer.parseInt(idStr) : null;
+    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank())
+        ? Integer.parseInt(idAdresseStr) : null;
 
     // 2. Construction de l'Adresse
     Adresse adresse = Adresse.builder()

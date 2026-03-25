@@ -33,8 +33,8 @@ public abstract class AbstractClientCommand implements Icommand {
     String idAdresseStr = request.getParameter("idAdresse");
 
     Integer idClient = (idStr != null && !idStr.isBlank()) ? Integer.parseInt(idStr) : null;
-    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank()) ?
-        Integer.parseInt(idAdresseStr) : null;
+    Integer idAdresse = (idAdresseStr != null && !idAdresseStr.isBlank())
+        ? Integer.parseInt(idAdresseStr) : null;
 
     Adresse adresse = Adresse.builder()
         .numeroRue(request.getParameter("numeroRue"))
@@ -58,10 +58,10 @@ public abstract class AbstractClientCommand implements Icommand {
     String nbStr = request.getParameter("nbEmployes");
 
     try {
-      long ca = (caStr != null && !caStr.isBlank()) ?
-          Long.parseLong(caStr.replaceAll("[^0-9]", "")) : 0L;
-      int nb = (nbStr != null && !nbStr.isBlank()) ?
-          Integer.parseInt(nbStr.replaceAll("[^0-9]", "")) : 0;
+      long ca = (caStr != null && !caStr.isBlank())
+          ? Long.parseLong(caStr.replaceAll("[^0-9]", "")) : 0L;
+      int nb = (nbStr != null && !nbStr.isBlank())
+          ? Integer.parseInt(nbStr.replaceAll("[^0-9]", "")) : 0;
 
       client.setChiffreAffaires(ca);
       client.setNbEmployes(nb);

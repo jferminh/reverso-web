@@ -44,7 +44,7 @@ public class Prospect extends Societe {
    * La validation garantit qu'elle ne peut pas être dans le futur.
    */
   @NotNull(message = "La date de prospection est obligatoire.")
-  @PastOrPresent(message = "La date doit être dans le passé ou le présent.")
+  @PastOrPresent(message = "La date de prospection ne peut pas être dans le future.")
   private LocalDate dateProspection;
 
   /**

@@ -56,16 +56,16 @@ public class UnicityService {
    * <p>OPTIMISATION : Seulement 2 requêtes SQL maximum exécutées.</p>
    *
    * @param raisonSociale La raison sociale soumise dans le formulaire.
-   * @param clientIdAExclure L'ID du client en cours de modification.
+   * @param clientIdaExclure L'ID du client en cours de modification.
    * @return true si un doublon est détecté, false si le nom est disponible.
    * @throws DaoException En cas d'erreur de base de données.
    */
   public boolean isRaisonSocialeDupliqueePourClient(
-      String raisonSociale, Integer clientIdAExclure) throws DaoException {
+      String raisonSociale, Integer clientIdaExclure) throws DaoException {
 
     // 1. Vérification côté Client
     Client clientExistant = clientDao.findByRaisonSociale(raisonSociale);
-    if (clientExistant != null && !clientExistant.getId().equals(clientIdAExclure)) {
+    if (clientExistant != null && !clientExistant.getId().equals(clientIdaExclure)) {
       return true; // Un AUTRE client porte déjà ce nom
     }
 
@@ -77,11 +77,12 @@ public class UnicityService {
   /**
    * Vérifie l'unicité lors de la MODIFICATION d'un PROSPECT.
    */
-  public boolean isRaisonSocialeDupliqueePourProspect(String raisonSociale, Integer prospectIdAExclure) throws DaoException {
+  public boolean isRaisonSocialeDupliqueePourProspect(
+      String raisonSociale, Integer prospectIdaExclure) throws DaoException {
 
     // 1. Vérification côté Prospect
     Prospect prospectExistant = prospectDao.findByRaisonSociale(raisonSociale);
-    if (prospectExistant != null && !prospectExistant.getId().equals(prospectIdAExclure)) {
+    if (prospectExistant != null && !prospectExistant.getId().equals(prospectIdaExclure)) {
       return true; // Un AUTRE prospect porte déjà ce nom
     }
 

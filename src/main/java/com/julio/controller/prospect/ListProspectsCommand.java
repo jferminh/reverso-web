@@ -34,13 +34,15 @@ public class ListProspectsCommand implements Icommand {
   @Override
   public String execute(HttpServletRequest request, HttpServletResponse response)
       throws Exception {
+
+    // ✅ DEBUG : début de l'exécution, utile pour tracer les flux en dev
     log.info("Chargement de la liste des prospects...");
 
     // 1. Instanciation du DAO et appel de la méthode de lecture
     ProspectDao prospectDao = new ProspectDao();
     List<Prospect> prospects = prospectDao.findAll();
 
-    log.debug("{} prospect(s) extrait(s) de la base de données", prospects.size());
+    log.debug("{} prospect(s) chargé(s)", prospects.size());
 
     // 2. Préparation du contexte pour la vue JSP (Data-Binding)
     request.setAttribute("prospects", prospects);

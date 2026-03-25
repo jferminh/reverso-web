@@ -31,6 +31,10 @@ public class SaveClientCommand extends AbstractClientCommand {
   private final ClientDao clientDao;
   private final UnicityService unicityService;
 
+  /**
+   * Constructeur par défaut.
+   * Initialise les accès aux données et le service de vérification d'unicité.
+   */
   public SaveClientCommand() {
     try {
       this.clientDao = new ClientDao();
@@ -62,9 +66,10 @@ public class SaveClientCommand extends AbstractClientCommand {
       // 3. Validation Métier (Unicité)
       boolean isDoublon = unicityService.isRaisonSocialeDupliqueePourClient(
           client.getRaisonSociale(), client.getId());
+
       if (isDoublon) {
-        log.warn("Doublon détecté pour la raison sociale : {}", client.getRaisonSociale());
-        // Utilisation de la belle exception que tu as créée !
+        log.warn("Rejet de la sauvegarde : La raison sociale '{}' est déjà utilisée.",
+            client.getRaisonSociale());
         throw new DuplicateResourceException("Raison sociale", client.getRaisonSociale());
       }
 
@@ -76,13 +81,13 @@ public class SaveClientCommand extends AbstractClientCommand {
         String messageErreur = violations.iterator().next().getMessage();
         log.warn("Échec Bean Validation pour le client {}: {}",
             client.getRaisonSociale(), messageErreur);
-        throw new InvalidParameterException(messageErreur); // Classe abstraite parente !
+        throw new InvalidParameterException(messageErreur);
       }
 
       // 5. Sauvegarde en Base de Données
       clientDao.save(client); // Si ça plante, DaoException remonte toute seule !
 
-      // 6. Succès et Redirection (PRG)
+      // 6. Succès et Redirection (Pattern PRG : Post-Redirect-Get)
       HttpSession session = request.getSession();
       session.setAttribute("successMessage", "Le client "
           + client.getRaisonSociale() + " a été enregistré avec succès.");
@@ -96,10 +101,10 @@ public class SaveClientCommand extends AbstractClientCommand {
     } catch (BusinessException e) {
       // On attrape SEULEMENT les erreurs liées à la saisie de l'utilisateur (BusinessException)
       // On recharge le formulaire pour lui laisser une chance de corriger.
+      log.debug("Interruption du flux métier (BusinessException) : {}", e.getMessage());
 
       if (client == null) {
-        // Si la construction a échoué dès la ligne 58,
-        // on crée un objet vide pour ne pas crasher la JSP
+        // Sécurité anti-NullPointerException si construireProspect()
         client = new Client();
         client.setAdresse(new com.julio.model.Adresse());
       }
@@ -117,9 +122,9 @@ public class SaveClientCommand extends AbstractClientCommand {
 
     boolean isEditMode = (client.getId() != null && client.getId() > 0);
     request.setAttribute("modeEdit", isEditMode);
-    request.setAttribute("pageTitle", (isEditMode ?
-        "Modifier" : "Nouveau") + " Client - Reverso CRM");
+    request.setAttribute("pageTitle", (isEditMode
+        ? "Modifier" : "Nouveau") + " Client - Reverso CRM");
 
-    return VUE_FORM;
+    return VUE_FORM; // Variable statique héritée de AbstractClientCommand
   }
 }
