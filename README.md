@@ -66,11 +66,16 @@ db.maximumPoolSize=10
 
 Exécuter la commande Maven pour nettoyer et compiler le projet :
 
-Bash
-mvn clean install
+```bash
+mvn clean package cargo:deploy
+```
 Déployer le fichier .war généré dans le dossier target/ sur votre serveur Apache Tomcat.
 
 Accéder à l'application via http://localhost:8080/nom-du-projet/app.
+
+Utilisateur : admin
+
+Mot de passe : password123
 
 🧪 Tests Unitaires
 Le projet inclut des tests unitaires validant la logique métier et les règles de validation.
