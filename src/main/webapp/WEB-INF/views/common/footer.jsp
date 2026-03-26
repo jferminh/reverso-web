@@ -39,9 +39,9 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/rgpd-consent.js"></script>
 
-<c:if test="${pageTitle == 'Tableau de bord - Reverso CRM'}">
-    <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
-</c:if>
+<%--<c:if test="${pageTitle == 'Tableau de bord - Reverso CRM'}">--%>
+<%--    <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>--%>
+<%--</c:if>--%>
 
 </body>
 </html>
