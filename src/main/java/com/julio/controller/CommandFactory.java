@@ -9,6 +9,8 @@ import com.julio.controller.client.ViewClientCommand;
 import com.julio.controller.common.AccueilCommand;
 import com.julio.controller.common.LoginCommand;
 import com.julio.controller.common.LogoutCommand;
+import com.julio.controller.contrat.DeleteContratCommand;
+import com.julio.controller.contrat.SaveContratCommand;
 import com.julio.controller.prospect.CreateProspectCommand;
 import com.julio.controller.prospect.DeleteProspectCommand;
 import com.julio.controller.prospect.EditProspectCommand;
@@ -53,6 +55,10 @@ public class CommandFactory {
     commands.put("editProspect", new EditProspectCommand());
     commands.put("viewProspect", new ViewProspectCommand());
     commands.put("deleteProspect", new DeleteProspectCommand());
+
+    // --- Contrats ---
+    commands.put("saveContrat", new SaveContratCommand());
+    commands.put("deleteContrat", new DeleteContratCommand());
   }
 
   /**
