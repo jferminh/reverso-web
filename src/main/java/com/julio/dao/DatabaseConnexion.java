@@ -9,12 +9,13 @@ import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Classe Singleton pour gérer le pool de connexions à la base de données MySQL.
+ * Singleton gérant le pool de connexions à la base de données (HikariCP).
  *
- * <p>Utilise le pattern "Double-Checked Locking" pour des performances maximales
- * en environnement multithread (Tomcat).
+ * <p>Implémente le "Double-Checked Locking" pour garantir la sécurité des threads
+ * (Thread-Safety) tout en maintenant des performances maximales sous Tomcat.
+ * </p>
  *
- * @author Julio FERMIN
+ * @author Julio
  * @version 3.1
  */
 @Slf4j
@@ -24,7 +25,7 @@ public class DatabaseConnexion {
   // Il garantit que la mémoire est synchronisée instantanément entre tous les threads.
   private static volatile DatabaseConnexion instance;
 
-  private final HikariDataSource dataSource; // 'final' car on ne le modifie plus après création
+  private final HikariDataSource dataSource;
 
   /**
    * Constructeur privé. Charge la configuration et initialise le pool HikariCP.
@@ -62,7 +63,7 @@ public class DatabaseConnexion {
       log.info("🚀 Pool HikariCP initialisé avec succès !");
 
     } catch (Exception e) {
-      log.error("❌ Erreur critique lors de l'initialisation du DataSource", e);
+      log.error("Erreur critique lors de l'initialisation du DataSource", e);
       throw new SQLException("Impossible de configurer la base de données", e);
     }
   }
@@ -102,7 +103,7 @@ public class DatabaseConnexion {
   public void closePool() {
     if (dataSource != null && !dataSource.isClosed()) {
       dataSource.close();
-      log.info("🛑 Pool de connexions HikariCP fermé avec succès.");
+      log.info("Pool de connexions HikariCP fermé avec succès.");
     }
   }
 }
