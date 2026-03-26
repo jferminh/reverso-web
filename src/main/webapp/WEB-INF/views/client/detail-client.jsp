@@ -235,25 +235,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    function ouvrirModalContrat(id = '', nom = '', montant = '') {
-        // Change le titre selon Création ou Modification
-        document.getElementById('modal-contrat-titre').textContent = id ? 'Modifier le Contrat' : 'Nouveau Contrat';
-
-        // Remplit les champs du formulaire
-        document.getElementById('input-contrat-id').value = id;
-        document.getElementById('input-contrat-nom').value = nom;
-        document.getElementById('input-contrat-montant').value = montant;
-
-        // Affiche la modale
-        new bootstrap.Modal(document.getElementById('modal-contrat')).show();
-    }
-
-    function preparerSuppressionContrat(id) {
-        document.getElementById('input-delete-contrat-id').value = id;
-        new bootstrap.Modal(document.getElementById('modal-suppression-contrat')).show();
-    }
-</script>
-
+<%-- Import du script externe pour la gestion des contrats --%>
+<script src="${pageContext.request.contextPath}/assets/js/contrats.js"></script>
 <%@ include file="../common/footer.jsp" %>

@@ -8,8 +8,6 @@
  *
  * <h2>Services inclus</h2>
  * <ul>
- *   <li>{@link com.julio.service.ValidationService} - Validation des données métier
- *       (formats email, téléphone, code postal, etc.)</li>
  *   <li>{@link com.julio.service.UnicityService} - Vérification de l'unicité des raisons
  *       sociales à travers clients et prospects</li>
  * </ul>

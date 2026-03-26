@@ -18,7 +18,6 @@
  * <ul>
  *   <li><b>DateUtils</b> : manipulation temporelle (parsing, formatage)</li>
  *   <li><b>RegexPatterns</b> : validation de formats (règles métier)</li>
- *   <li><b>DisplayDialog</b> : interaction utilisateur (présentation)</li>
  * </ul>
  *
  * @author Julio FERMIN

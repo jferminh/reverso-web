@@ -1,7 +1,6 @@
 package com.julio.dao;
 
 import com.julio.exception.DaoException;
-import com.julio.exception.ValidationException;
 import com.julio.model.Adresse;
 import com.julio.util.SqlExceptionAnalyzer;
 import java.sql.Connection;
@@ -61,7 +60,7 @@ public class AdresseDao {
       }
       return adresses;
 
-    } catch (SQLException | ValidationException e) {
+    } catch (SQLException e) {
       log.error("Erreur lors de la récupération de toutes les adresses", e);
       throw new DaoException(DaoException.ErrorCode.READ_ERROR,
           "findAll", null, "Erreur de lecture", e);
@@ -93,7 +92,7 @@ public class AdresseDao {
         }
         return null;
       }
-    } catch (SQLException | ValidationException e) {
+    } catch (SQLException e) {
       log.error("Erreur lors de la recherche de l'adresse ID={}", id, e);
       throw new DaoException(DaoException.ErrorCode.READ_ERROR,
           "findById", id, "Erreur de lecture", e);
@@ -203,15 +202,14 @@ public class AdresseDao {
    * Méthode utilitaire pour mapper un ResultSet vers un objet Adresse.
    */
   private Adresse mapResultSetToAdresse(ResultSet rs)
-      throws SQLException, ValidationException {
-    // ✅ CORRECTION DU BUG CRITIQUE : Utilisation de rs.getString() au lieu de chaînes dures
-    Adresse adresse = Adresse.builder()
+      throws SQLException {
+
+    return Adresse.builder()
+        .id(rs.getInt("id_adresse"))
         .numeroRue(rs.getString("numero_rue"))
         .nomRue(rs.getString("nom_rue"))
         .codePostal(rs.getString("code_postal"))
         .ville(rs.getString("ville"))
         .build();
-    adresse.setId(rs.getInt("id_adresse"));
-    return adresse;
   }
 }
