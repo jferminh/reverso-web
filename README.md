@@ -1,7 +1,7 @@
 # 💼 CRM - Gestion de Clients et Prospects (Projet ECF)
 
-![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=java&logoColor=white)
-![Jakarta EE](https://img.shields.io/badge/Jakarta_EE-10-2396E8?style=for-the-badge&logo=eclipse&logoColor=white)
+![Java](https://img.shields.io/badge/Java-25%2B-ED8B00?style=for-the-badge&logo=java&logoColor=white)
+![Jakarta EE](https://img.shields.io/badge/Jakarta_EE-11-2396E8?style=for-the-badge&logo=eclipse&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
 
@@ -52,8 +52,8 @@ Le projet repose sur une architecture **MVC (Modèle-Vue-Contrôleur)** stricte 
 Créer une base de données MySQL nommée `ecf_dao` et exécuter le script SQL de création des tables fourni à la racine du projet (`schema.sql` ou équivalent).
 
 ### 2. Configuration
-Renommer le fichier `src/main/resources/database.properties.example` à `src/main/resources/database.properties`
-Modifier le fichier `src/main/resources/database.properties` avec vos identifiants MySQL :
+* Renommer le fichier `src/main/resources/database.properties.example` à `src/main/resources/database.properties`
+* Modifier le fichier `src/main/resources/database.properties` avec vos identifiants MySQL :
 ```properties
 db.url=jdbc:mysql://localhost:3306/ecf_dao?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
 db.username=root
@@ -74,10 +74,12 @@ Accéder à l'application via http://localhost:8080/nom-du-projet/app.
 
 🧪 Tests Unitaires
 Le projet inclut des tests unitaires validant la logique métier et les règles de validation.
-Pour lancer les tests :
 
-Bash
+Pour lancer les tests :
+```bash
 mvn test
+```
+
 Projet réalisé par Julio FERMIN dans le cadre de la formation Concepteur Développeur d'Applications.
 
 
