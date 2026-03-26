@@ -30,6 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProspectDao extends SocieteDao {
 
+  /**
+   * Constructeur ProspectDao.
+   */
   public ProspectDao() throws DaoException {
     super();
   }

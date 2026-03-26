@@ -1,6 +1,10 @@
 package com.julio.model;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.julio.util.DateUtils;
 import jakarta.validation.ConstraintViolation;
@@ -66,7 +70,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Adresse valide ne remonte aucune erreur")
-    void adresseValide_Ok() {
+    void adresseValideOk() {
       Adresse adresse = fabriquerAdresseValide();
       Set<ConstraintViolation<Adresse>> violations = validator.validate(adresse);
       assertTrue(violations.isEmpty());
@@ -74,13 +78,14 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Code postal doit comporter exactement 5 chiffres (Regex)")
-    void codePostal_Invalide_Erreur() {
+    void codePostalInvalideErreur() {
       Adresse adresse = fabriquerAdresseValide();
       adresse.setCodePostal("7500A"); // Contient une lettre
       Set<ConstraintViolation<Adresse>> violations = validator.validate(adresse);
 
       assertFalse(violations.isEmpty());
-      assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("codePostal")));
+      assertTrue(violations.stream().anyMatch(
+          v -> v.getPropertyPath().toString().equals("codePostal")));
 
       adresse.setCodePostal("7500"); // 4 chiffres
       assertFalse(validator.validate(adresse).isEmpty());
@@ -93,7 +98,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Le téléphone doit respecter le format Regex")
-    void telephone_Invalide_Erreur() {
+    void telephoneInvalideErreur() {
       Client client = fabriquerClientValide();
       client.setTelephone("12345"); // Trop court
       assertFalse(validator.validate(client).isEmpty());
@@ -104,7 +109,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("L'email doit respecter le format Regex")
-    void email_Invalide_Erreur() {
+    void emailInvalideErreur() {
       Client client = fabriquerClientValide();
       client.setEmail("contact@domaine"); // Pas de TLD (.com, .fr)
       assertFalse(validator.validate(client).isEmpty());
@@ -112,7 +117,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Les commentaires ne sont pas obligatoires")
-    void commentaires_Vides_Ok() {
+    void commentairesVidesOk() {
       Client client = fabriquerClientValide();
       client.setCommentaires(null); // Optionnel
       assertTrue(validator.validate(client).isEmpty());
@@ -125,7 +130,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Le chiffre d'affaires doit être > 200")
-    void chiffreAffaires_InferieurA200_Erreur() {
+    void chiffreAffairesInferieurA200Erreur() {
       Client client = fabriquerClientValide();
 
       client.setChiffreAffaires(200L); // Strictement supérieur à 200 requis
@@ -137,7 +142,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Le nombre d'employés doit être strictement > 0")
-    void nbEmployes_Zero_Erreur() {
+    void nbEmployesZeroErreur() {
       Client client = fabriquerClientValide();
       client.setNbEmployes(0);
       assertFalse(validator.validate(client).isEmpty());
@@ -150,18 +155,19 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("La date de prospection ne peut pas être dans le futur")
-    void dateProspection_DansLeFutur_Erreur() {
+    void dateProspectionDansLeFuturErreur() {
       Prospect prospect = fabriquerProspectValide();
       prospect.setDateProspection(LocalDate.now().plusDays(1)); // Demain
 
       Set<ConstraintViolation<Prospect>> violations = validator.validate(prospect);
       assertFalse(violations.isEmpty());
-      assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("dateProspection")));
+      assertTrue(violations.stream().anyMatch(
+          v -> v.getPropertyPath().toString().equals("dateProspection")));
     }
 
     @Test
     @DisplayName("La date peut être formatée et parsée selon le pattern dd/MM/yyyy")
-    void dateProspection_Formatage_Ok() {
+    void dateProspectionFormatageOk() {
       // ECF : Vérification du DateTimeFormatter
       String dateSaisie = "25/12/2026";
 
@@ -179,7 +185,7 @@ class ValidationMetierTest {
 
     @Test
     @DisplayName("Une erreur de format lève une DateTimeParseException")
-    void dateProspection_MauvaisFormat_Erreur() {
+    void dateProspectionMauvaisFormatErreur() {
       String dateMalSaisie = "2026-12-25"; // Format ISO au lieu de FR
 
       assertThrows(DateTimeParseException.class, () -> DateUtils.parseDate(dateMalSaisie));
