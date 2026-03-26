@@ -1,7 +1,6 @@
 package com.julio.dao;
 
 import com.julio.exception.DaoException;
-import com.julio.exception.ValidationException;
 import com.julio.model.Adresse;
 import com.julio.model.Client;
 import com.julio.model.Contrat;
@@ -31,9 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClientDao extends SocieteDao {
 
-  private final ContratDao contratDao;
-  private static ClientDao instance;
-
   /**
    * Constructeur qui récupère l'instance de DatabaseConnection.
    * Initialise également le ContratDao pour gérer les contrats associés.
@@ -42,21 +38,8 @@ public class ClientDao extends SocieteDao {
    */
   public ClientDao() throws DaoException {
     super();
-    this.contratDao = new ContratDao();
+    ContratDao contratDao = new ContratDao();
 
-  }
-
-  /**
-   * Méthode synchronisée de l'instance.
-   *
-   * @return intance
-   * @throws DaoException DAO exception
-   */
-  public static synchronized ClientDao getInstance() throws DaoException {
-    if (instance == null) {
-      instance = new ClientDao();
-    }
-    return instance;
   }
 
   /**
@@ -74,10 +57,10 @@ public class ClientDao extends SocieteDao {
         """
             SELECT s.id_societe, s.raison_sociale, a.id_adresse, s.telephone, s.email,
             s.commentaires, c.id_client, c.chiffre_affaires, c.nb_employes,
-            a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat, 
-            ct.nom_contrat, ct.montant 
-            FROM societe s 
-            INNER JOIN client c ON s.id_societe = c.id_societe 
+            a.numero_rue, a.nom_rue, a.code_postal, a.ville, ct.id_contrat,
+            ct.nom_contrat, ct.montant
+            FROM societe s
+            INNER JOIN client c ON s.id_societe = c.id_societe
             INNER JOIN adresse a ON s.adresse_id = a.id_adresse
             LEFT JOIN contrat ct ON c.id_client = ct.client_id
             ORDER BY s.raison_sociale ASC
@@ -89,6 +72,8 @@ public class ClientDao extends SocieteDao {
 
       while (rs.next()) {
         Integer clientId = rs.getInt("id_client");
+
+        // 1. Récupération ou création du Client dans la Map
         Client client = clientsMap.computeIfAbsent(clientId, id -> {
           try {
             return mapResultSetToClient(rs);
@@ -98,25 +83,29 @@ public class ClientDao extends SocieteDao {
           }
         });
 
-        if (client == null) {
+        // 2. Traitement des contrats (Seulement si le client a bien été instancié)
+        if (client != null) {
           Integer contratId = rs.getInt("id_contrat");
+
+          // Le LEFT JOIN peut renvoyer NULL s'il n'y a pas de contrat. rs.wasNull() vérifie ça.
           if (!rs.wasNull() && contratId > 0) {
-            try {
-              Contrat contrat = new Contrat(clientId, rs.getString("nom_contrat"),
-                  rs.getDouble("montant"));
-              contrat.setId(contratId);
-              client.ajouterContrat(contrat);
-            } catch (ValidationException ex) {
-              log.warn("Contrat invalide ignoré pour client ID={}", clientId);
-            }
+            Contrat contrat = Contrat.builder()
+                .id(contratId)
+                .clientId(clientId)
+                .nomContrat(rs.getString("nom_contrat"))
+                .montant(rs.getDouble("montant"))
+                .build();
+
+            client.ajouterContrat(contrat);
           }
         }
       }
       return new ArrayList<>(clientsMap.values());
+
     } catch (SQLException ex) {
       log.error("Erreur SQL dans findAll", ex);
       throw new DaoException(SqlExceptionAnalyzer.categorize(ex), "findAll",
-          null, "Erreur récupération", ex);
+          null, "Erreur lors de la récupération des clients", ex);
     }
   }
 
@@ -147,7 +136,7 @@ public class ClientDao extends SocieteDao {
 
           String sql =
               """
-                  INSERT INTO client (id_societe, chiffre_affaires, nb_employes) 
+                  INSERT INTO client (id_societe, chiffre_affaires, nb_employes)
                   VALUES (?, ?, ?)
               """;
           try (PreparedStatement pstmt = connection.prepareStatement(sql,
@@ -170,7 +159,7 @@ public class ClientDao extends SocieteDao {
           }
         } else {
           // ================== LOGIQUE UPDATE ==================
-          Integer societeId = null;
+          Integer societeId;
           String getSocieteSql = "SELECT id_societe FROM client WHERE id_client = ?";
 
           try (PreparedStatement pstmt = connection.prepareStatement(getSocieteSql)) {
@@ -196,7 +185,7 @@ public class ClientDao extends SocieteDao {
           // Mise à jour Client
           String sql =
               """
-                  UPDATE client SET chiffre_affaires = ?, nb_employes = ? 
+                  UPDATE client SET chiffre_affaires = ?, nb_employes = ?
                   WHERE id_client = ?
               """;
           try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -209,12 +198,12 @@ public class ClientDao extends SocieteDao {
           }
         }
 
-        connection.commit(); // ✅ Succès total
+        connection.commit();
         log.info("Client {} avec succès : ID={}", isNew ? "créé" : "mis à jour", client.getId());
         return client;
 
       } catch (Exception e) {
-        connection.rollback(); // ❌ Annulation en cas d'erreur
+        connection.rollback();
         log.warn("Rollback effectué suite à une erreur : {}", e.getMessage());
         throw e;
       }
@@ -249,13 +238,13 @@ public class ClientDao extends SocieteDao {
     try (Connection connection = dbConnexion.getConnection()) {
       connection.setAutoCommit(false);
       try {
-        Integer societeId = null;
-        Integer adresseId = null;
+        Integer societeId;
+        Integer adresseId;
 
         String getIdsSql =
             """
-                SELECT c.id_societe, s.adresse_id FROM client c 
-                INNER JOIN societe s ON c.id_societe = s.id_societe 
+                SELECT c.id_societe, s.adresse_id FROM client c
+                INNER JOIN societe s ON c.id_societe = s.id_societe
                 WHERE c.id_client = ?
             """;
 
@@ -337,29 +326,14 @@ public class ClientDao extends SocieteDao {
             WHERE s.raison_sociale = ?
         """;
 
-    // ✅ OPTIMISATION : try-with-resources pour Connection et PreparedStatement
     try (Connection connection = dbConnexion.getConnection();
          PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
       pstmt.setString(1, raisonSociale);
 
-      // ✅ OPTIMISATION : try-with-resources imbriqué pour le ResultSet
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
-          try {
-            return mapResultSetToClient(rs);
-
-          } catch (ValidationException e) {
-            log.error("Erreur validation données client avec raison sociale '{}'",
-                raisonSociale, e);
-            throw new DaoException(
-                DaoException.ErrorCode.INVALID_PARAMETER,
-                "findByRaisonSociale",
-                null,
-                "Données invalides pour le client : " + e.getMessage(),
-                e
-            );
-          }
+          return mapResultSetToClient(rs);
         }
         return null; // Aucun client trouvé
       }
@@ -395,41 +369,26 @@ public class ClientDao extends SocieteDao {
 
     String sql =
         """
-        SELECT c.id_client, s.raison_sociale,
-        a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville,
-        s.telephone, s.email, s.commentaires,
-        c.chiffre_affaires, c.nb_employes
-        FROM client c
-        INNER JOIN societe s ON c.id_societe = s.id_societe
-        INNER JOIN adresse a ON s.adresse_id = a.id_adresse
-        WHERE c.id_client = ?
+            SELECT c.id_client, s.raison_sociale,
+            a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville,
+            s.telephone, s.email, s.commentaires,
+            c.chiffre_affaires, c.nb_employes
+            FROM client c
+            INNER JOIN societe s ON c.id_societe = s.id_societe
+            INNER JOIN adresse a ON s.adresse_id = a.id_adresse
+            WHERE c.id_client = ?
         """;
 
-    // ✅ OPTIMISATION : try-with-resources (Fermeture automatique
-    // de Connection et PreparedStatement)
     try (Connection connection = dbConnexion.getConnection();
          PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
       pstmt.setInt(1, id);
 
-      // ✅ OPTIMISATION : try-with-resources imbriqué pour le ResultSet
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
-          try {
-            return mapResultSetToClient(rs);
-
-          } catch (ValidationException e) {
-            log.error("Erreur de validation lors du mapping du client ID={}", id, e);
-            throw new DaoException(
-                DaoException.ErrorCode.INVALID_PARAMETER,
-                "findById",
-                id,
-                "Données invalides pour le client : " + e.getMessage(),
-                e
-            );
-          }
+          return mapResultSetToClient(rs);
         }
-        return null; // Aucun client trouvé
+        return null;
       }
 
     } catch (SQLException e) {
@@ -497,17 +456,17 @@ public class ClientDao extends SocieteDao {
    * @return le client mappé
    * @throws SQLException si erreur d'accès aux données du ResultSet
    */
-  private Client mapResultSetToClient(ResultSet rs)
-      throws SQLException, ValidationException {
+  private Client mapResultSetToClient(ResultSet rs) throws SQLException {
     Adresse adresse = Adresse.builder()
+        .id(rs.getInt("id_adresse"))
         .numeroRue(rs.getString("numero_rue"))
         .nomRue(rs.getString("nom_rue"))
         .codePostal(rs.getString("code_postal"))
         .ville(rs.getString("ville"))
         .build();
-    adresse.setId(rs.getInt("id_adresse"));
 
-    Client client = Client.builder()
+    return Client.builder()
+        .id(rs.getInt("id_client"))
         .raisonSociale(rs.getString("raison_sociale"))
         .adresse(adresse)
         .telephone(rs.getString("telephone"))
@@ -516,8 +475,5 @@ public class ClientDao extends SocieteDao {
         .chiffreAffaires(rs.getLong("chiffre_affaires"))
         .nbEmployes(rs.getInt("nb_employes"))
         .build();
-    client.setId(rs.getInt("id_client"));
-    return client;
   }
-
 }

@@ -11,17 +11,17 @@ import java.sql.SQLException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * DAO pour les opérations sur la table {@code societe}.
+ * DAO parent pour les opérations sur la table {@code societe}.
  *
- * <p><b>Pattern Méthodes Participantes :</b> Les méthodes de cette classe
- * participent à des transactions gérées par {@link ClientDao} et {@link ProspectDao}.
- * Toutes les méthodes reçoivent l'objet Connection du parent pour respecter l'ACID.
+ * <p>Applique le pattern des "Méthodes Participantes" : Ces méthodes ne gèrent pas
+ * leurs propres transactions. Elles reçoivent l'objet Connection de la part
+ * de {@link ClientDao} ou {@link ProspectDao} pour garantir l'Atomicité (ACID).
  * </p>
  *
- * @author Julio FERMIN
+ * @author Julio
  * @version 3.0 (Optimisé avec SLF4J et try-with-resources)
  */
-@Slf4j // ✅ Remplace tout le boilerplate du Logger
+@Slf4j
 public abstract class SocieteDao {
 
   protected final DatabaseConnexion dbConnexion;
@@ -64,16 +64,9 @@ public abstract class SocieteDao {
 
     Adresse adresse = societe.getAdresse();
 
-    // Note : Si adresseDao.create n'utilise pas la même 'connection',
-    // il faudrait aussi lui passer en paramètre pour être 100% transactionnel.
+    // 1. Sauvegarde de l'adresse (Participant à la transaction)
     if (adresse.getId() == null) {
-      try {
-        adresse = adresseDao.save(adresse, connection);
-      } catch (DaoException ex) {
-        log.error("Erreur lors de la création de l'adresse", ex);
-        throw new DaoException(DaoException.ErrorCode.CREATE_ERROR, "createSociete", null,
-            "Erreur lors de la création de l'adresse", ex);
-      }
+      adresse = adresseDao.save(adresse, connection);
     }
 
     String sql =
@@ -82,7 +75,7 @@ public abstract class SocieteDao {
             VALUES (?, ?, ?, ?, ?)
         """;
 
-    // OPTIMISATION : try-with-resources. Le PreparedStatement se ferme tout seul !
+    // 2. Insertion de la société (Try-with-resources imbriqués)
     try (PreparedStatement pstmt =
              connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
@@ -96,7 +89,6 @@ public abstract class SocieteDao {
         throw new SQLException("L'insertion de la société a échoué, aucune ligne affectée");
       }
 
-      // Un autre try-with-resources imbriqué pour le ResultSet
       try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
         if (generatedKeys.next()) {
           Integer societeId = generatedKeys.getInt(1);
@@ -134,7 +126,6 @@ public abstract class SocieteDao {
             WHERE id_societe = ?
         """;
 
-    // OPTIMISATION : try-with-resources
     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
       pstmt.setString(1, societe.getRaisonSociale());
       pstmt.setString(2, societe.getTelephone());
@@ -143,7 +134,8 @@ public abstract class SocieteDao {
       pstmt.setInt(5, societeId);
 
       if (pstmt.executeUpdate() == 0) {
-        throw new SQLException("La mise à jour a échoué, aucune ligne affectée");
+        throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
+            "saveSociete", societeId, "Société introuvable");
       }
 
     } catch (SQLException e) {
@@ -170,21 +162,17 @@ public abstract class SocieteDao {
 
     String sql = "DELETE FROM societe WHERE id_societe = ?";
 
-    // ✅ OPTIMISATION : try-with-resources
     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
       pstmt.setInt(1, societeId);
 
-      if (pstmt.executeUpdate() > 0) {
-        log.debug("Société supprimée : ID={}", societeId);
-      } else {
-        log.warn("Aucune société trouvée avec l'ID {}", societeId);
+      if (pstmt.executeUpdate() == 0) {
         throw new DaoException(DaoException.ErrorCode.ENTITY_NOT_FOUND,
-            "deleteSociete", societeId, "Introuvable");
+            "deleteSociete", societeId, "Société introuvable");
       }
+      log.debug("Société supprimée : ID={}", societeId);
 
     } catch (SQLException e) {
       log.error("Erreur SQL lors de la suppression de la société ID={}", societeId, e);
-
       if (SqlExceptionAnalyzer.isForeignKeyViolation(e)) {
         throw new DaoException(DaoException.ErrorCode.FOREIGN_KEY_VIOLATION,
             "deleteSociete", societeId,

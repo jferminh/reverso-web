@@ -1,7 +1,6 @@
 package com.julio.dao;
 
 import com.julio.exception.DaoException;
-import com.julio.exception.ValidationException;
 import com.julio.model.Adresse;
 import com.julio.model.Interesse;
 import com.julio.model.Prospect;
@@ -31,11 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProspectDao extends SocieteDao {
 
-  /**
-   * Constructeur Prospect.
-   *
-   * @throws DaoException Exception
-   */
   public ProspectDao() throws DaoException {
     super();
   }
@@ -52,7 +46,7 @@ public class ProspectDao extends SocieteDao {
     boolean isNew = (prospect.getId() == null || prospect.getId() <= 0);
 
     try (Connection connection = dbConnexion.getConnection()) {
-      connection.setAutoCommit(false); // Début de la transaction
+      connection.setAutoCommit(false);
 
       try {
         if (isNew) {
@@ -60,7 +54,7 @@ public class ProspectDao extends SocieteDao {
 
           String sql =
               """
-                  INSERT INTO prospect (id_societe, date_prospection, interesse) 
+                  INSERT INTO prospect (id_societe, date_prospection, interesse)
                   VALUES (?, ?, ?)
               """;
           try (PreparedStatement pstmt = connection.prepareStatement(
@@ -82,7 +76,7 @@ public class ProspectDao extends SocieteDao {
             }
           }
         } else {
-          Integer societeId = null;
+          Integer societeId;
           String getSocieteSql = "SELECT id_societe FROM prospect WHERE id_prospect = ?";
           try (PreparedStatement pstmt = connection.prepareStatement(getSocieteSql)) {
             pstmt.setInt(1, prospect.getId());
@@ -104,11 +98,11 @@ public class ProspectDao extends SocieteDao {
 
           String sql =
               """
-                  UPDATE prospect SET date_prospection = ?, interesse = ? 
+                  UPDATE prospect SET date_prospection = ?, interesse = ?
                   WHERE id_prospect = ?
               """;
           try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setObject(1, prospect.getDateProspection()); // JDBC 4.2
+            pstmt.setObject(1, prospect.getDateProspection());
             pstmt.setInt(2, prospect.getInteresse() != null ? prospect.getInteresse().toInt() : 0);
             pstmt.setInt(3, prospect.getId());
             if (pstmt.executeUpdate() == 0) {
@@ -149,7 +143,7 @@ public class ProspectDao extends SocieteDao {
     List<Prospect> prospects = new ArrayList<>();
     String sql =
         """
-            SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse, 
+            SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
                    s.raison_sociale, s.telephone, s.email, s.commentaires,
                    a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville
             FROM prospect p
@@ -163,12 +157,7 @@ public class ProspectDao extends SocieteDao {
          ResultSet rs = pstmt.executeQuery()) {
 
       while (rs.next()) {
-        try {
-          prospects.add(mapResultSetToProspect(rs));
-        } catch (ValidationException e) {
-          log.warn("Prospect ignoré car ses données sont corrompues (ID={})",
-              rs.getInt("id_prospect"));
-        }
+        prospects.add(mapResultSetToProspect(rs));
       }
       return prospects;
     } catch (SQLException e) {
@@ -200,14 +189,16 @@ public class ProspectDao extends SocieteDao {
 
     try (Connection conn = dbConnexion.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
       pstmt.setInt(1, id);
+
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
           return mapResultSetToProspect(rs);
         }
         return null;
       }
-    } catch (SQLException | ValidationException e) {
+    } catch (SQLException e) {
       log.error("Erreur lors de findById", e);
       throw new DaoException(DaoException.ErrorCode.READ_ERROR,
           "findById", id, "Erreur lecture unitaire", e);
@@ -227,13 +218,13 @@ public class ProspectDao extends SocieteDao {
       connection.setAutoCommit(false); // Début transaction
 
       try {
-        Integer societeId = null;
-        Integer adresseId = null;
+        Integer societeId;
+        Integer adresseId;
 
         String getIdsSql =
             """
-                SELECT p.id_societe, s.adresse_id FROM prospect p 
-                INNER JOIN societe s ON p.id_societe = s.id_societe 
+                SELECT p.id_societe, s.adresse_id FROM prospect p
+                INNER JOIN societe s ON p.id_societe = s.id_societe
                 WHERE p.id_prospect = ?
             """;
         try (PreparedStatement pstmt = connection.prepareStatement(getIdsSql)) {
@@ -259,7 +250,7 @@ public class ProspectDao extends SocieteDao {
 
         this.deleteSociete(connection, societeId);
 
-        if (adresseId != null && !isAdresseReferencee(connection, adresseId)) {
+        if (!isAdresseReferencee(connection, adresseId)) {
           adresseDao.deleteAdresse(connection, adresseId);
         }
 
@@ -299,7 +290,7 @@ public class ProspectDao extends SocieteDao {
             SELECT p.id_prospect, p.id_societe, p.date_prospection, p.interesse,
                    s.raison_sociale, s.telephone, s.email, s.commentaires,
                    a.id_adresse, a.numero_rue, a.nom_rue, a.code_postal, a.ville
-            FROM prospect p 
+            FROM prospect p
             INNER JOIN societe s ON p.id_societe = s.id_societe
             INNER JOIN adresse a ON s.adresse_id = a.id_adresse
             WHERE s.raison_sociale = ?
@@ -310,12 +301,7 @@ public class ProspectDao extends SocieteDao {
       pstmt.setString(1, raisonSociale);
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
-          try {
-            return mapResultSetToProspect(rs);
-          } catch (ValidationException e) {
-            throw new DaoException(DaoException.ErrorCode.READ_ERROR,
-                "findByRaisonSociale", null, "Données corrompues", e);
-          }
+          return mapResultSetToProspect(rs);
         }
         return null;
       }
@@ -344,19 +330,20 @@ public class ProspectDao extends SocieteDao {
    * Mappe la ligne actuelle du ResultSet vers une entité Prospect.
    */
   private Prospect mapResultSetToProspect(ResultSet rs)
-      throws SQLException, ValidationException {
+      throws SQLException {
     Adresse adresse = Adresse.builder()
+        .id(rs.getInt("id_adresse"))
         .numeroRue(rs.getString("numero_rue"))
         .nomRue(rs.getString("nom_rue"))
         .codePostal(rs.getString("code_postal"))
         .ville(rs.getString("ville"))
         .build();
-    adresse.setId(rs.getInt("id_adresse"));
 
     // JDBC 4.2 : Lecture directe en LocalDate !
     LocalDate dateProspection = rs.getObject("date_prospection", LocalDate.class);
 
-    Prospect prospect = Prospect.builder()
+    return Prospect.builder()
+        .id(rs.getInt("id_prospect"))
         .raisonSociale(rs.getString("raison_sociale"))
         .adresse(adresse)
         .telephone(rs.getString("telephone"))
@@ -365,9 +352,5 @@ public class ProspectDao extends SocieteDao {
         .dateProspection(dateProspection)
         .interesse(Interesse.fromInt(rs.getInt("interesse")))
         .build();
-
-    prospect.setId(rs.getInt("id_prospect"));
-
-    return prospect;
   }
 }
