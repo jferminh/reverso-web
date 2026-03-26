@@ -1,10 +1,13 @@
 package com.julio.controller.client;
 
 import com.julio.dao.ClientDao;
+import com.julio.dao.ContratDao;
 import com.julio.exception.ResourceNotFoundException;
 import com.julio.model.Client;
+import com.julio.model.Contrat;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -52,6 +55,12 @@ public class ViewClientCommand extends AbstractClientCommand {
       throw new ResourceNotFoundException(
           "Le client que vous souhaitez consulter n'existe pas ou a été supprimé.");
     }
+
+    ContratDao contratDao = new ContratDao();
+    List<Contrat> contratsDuClient = contratDao.findByIdClient(id);
+    client.setContrats(contratsDuClient);
+
+    log.debug("{} contrat(s) chargé(s) pour le client ID={}", contratsDuClient.size(), id);
 
     // 5. Injection et Routage
     request.setAttribute("client", client);
